@@ -1,4 +1,3 @@
-import { getPositionInsideSplit } from "./convert";
 import { ElasticLayout } from "./ElasticLayout";
 import { ElasticPane } from "./ElasticPane";
 
@@ -20,7 +19,13 @@ export class ElasticSplit {
 
   private createResizerElement(): HTMLElement {
     const resizerElement = document.createElement("div");
-    resizerElement.className = "elastic-resizer";
+
+    if (this.direction === "horizontal") {
+      resizerElement.className = "elastic-resizer-horizontal";
+    } else {
+      resizerElement.className = "elastic-resizer-vertical";
+    }
+
     return resizerElement;
   }
 
@@ -29,7 +34,11 @@ export class ElasticSplit {
       pane.element.getBoundingClientRect()
     );
 
-    return firstRect.width + secondRect.width;
+    if (this.direction === "horizontal") {
+      return firstRect.width + secondRect.width;
+    } else {
+      return firstRect.height + secondRect.height;
+    }
   }
 
   public apply(): void {
@@ -42,12 +51,15 @@ export class ElasticSplit {
     let resizerStartPosition: number;
 
     const dragStart = (e: MouseEvent): void => {
-      dragStartPosition = getPositionInsideSplit(e.clientX, this);
+      dragStartPosition = this.getPositionWithinSplit(
+        this.direction === "horizontal" ? e.clientX : e.clientY
+      );
 
       const resizerRect = this.resizerElement.getBoundingClientRect();
-      resizerStartPosition = getPositionInsideSplit(
-        resizerRect.left + resizerRect.width / 2,
-        this
+      resizerStartPosition = this.getPositionWithinSplit(
+        this.direction === "horizontal"
+          ? resizerRect.left + resizerRect.width / 2
+          : resizerRect.top + resizerRect.height / 2
       );
 
       document.addEventListener("mousemove", dragMove);
@@ -55,7 +67,10 @@ export class ElasticSplit {
     };
 
     const dragMove = (e: MouseEvent): void => {
-      const mousePosition = getPositionInsideSplit(e.clientX, this);
+      const mousePosition = this.getPositionWithinSplit(
+        this.direction === "horizontal" ? e.clientX : e.clientY
+      );
+
       const offset = resizerStartPosition + mousePosition - dragStartPosition;
 
       this.updatePaneSizes(offset);
@@ -72,21 +87,39 @@ export class ElasticSplit {
   private updatePaneSizes(offsetPosition: number): void {
     const layoutSize = this.layout.getSize();
     const splitSize = this.getSize();
+
     const splitSizeRatio = splitSize / layoutSize;
 
-    const resizerSize = this.resizerElement.getBoundingClientRect().width;
+    const resizerRect = this.resizerElement.getBoundingClientRect();
+    const resizerSize =
+      this.direction === "horizontal" ? resizerRect.width : resizerRect.height;
+
     const firstPaneSize = offsetPosition - resizerSize / 2;
     const secondPaneSize = splitSize - firstPaneSize;
 
-    const firstPaneSizeRatioInsideSplit = firstPaneSize / splitSize;
-    const secondPaneSizeRatioInsideSplit = secondPaneSize / splitSize;
+    const firstPaneSizeRatioWithinSplit = firstPaneSize / splitSize;
+    const secondPaneSizeRatioWithinSplit = secondPaneSize / splitSize;
 
     const firstPaneSizePercentage =
-      firstPaneSizeRatioInsideSplit * splitSizeRatio * 100;
+      firstPaneSizeRatioWithinSplit * splitSizeRatio * 100;
     const secondPaneSizePercentage =
-      secondPaneSizeRatioInsideSplit * splitSizeRatio * 100;
+      secondPaneSizeRatioWithinSplit * splitSizeRatio * 100;
 
-    this.panes[0].applySizePercentage(firstPaneSizePercentage);
-    this.panes[1].applySizePercentage(secondPaneSizePercentage);
+    this.panes[0].applySizePercentage(firstPaneSizePercentage, this.direction);
+    this.panes[1].applySizePercentage(secondPaneSizePercentage, this.direction);
+  }
+
+  private getPositionWithinSplit(position: number) {
+    const rect = this.panes[0].element.getBoundingClientRect();
+
+    const relativePosition =
+      position - (this.direction === "horizontal" ? rect.left : rect.top);
+
+    const relativePositionClamped = Math.max(
+      0,
+      Math.min(relativePosition, this.getSize())
+    );
+
+    return relativePositionClamped;
   }
 }

@@ -1,17 +1,38 @@
 import "./style.css";
 import { ElasticLayout, ElasticPane } from "@elastic-panes/core";
 
-const a = document.getElementById("A")!;
-const b = document.getElementById("B")!;
-const c = document.getElementById("C")!;
-const d = document.getElementById("D")!;
+const horizontal1 = document.getElementById("horizontal_1")!;
+const horizontal2 = document.getElementById("horizontal_2")!;
+const horizontal3 = document.getElementById("horizontal_3")!;
+const horizontal4 = document.getElementById("horizontal_4")!;
 
-const paneA = new ElasticPane(a);
-const paneB = new ElasticPane(b);
-const paneC = new ElasticPane(c);
-const paneD = new ElasticPane(d);
+const horizontalPane1 = new ElasticPane(horizontal1);
+const horizontalPane2 = new ElasticPane(horizontal2);
+const horizontalPane3 = new ElasticPane(horizontal3);
+const horizontalPane4 = new ElasticPane(horizontal4);
 
-const layout = new ElasticLayout([paneA, paneB, paneC, paneD], {
-  direction: "horizontal",
-});
-layout.apply();
+const horizontalLayout = new ElasticLayout(
+  [horizontalPane1, horizontalPane2, horizontalPane3, horizontalPane4],
+  {
+    direction: "horizontal",
+  }
+);
+horizontalLayout.apply();
+
+const vertical1 = document.getElementById("vertical_1")!;
+const vertical2 = document.getElementById("vertical_2")!;
+const vertical3 = document.getElementById("vertical_3")!;
+const vertical4 = document.getElementById("vertical_4")!;
+
+const verticalPane1 = new ElasticPane(vertical1);
+const verticalPane2 = new ElasticPane(vertical2);
+const verticalPane3 = new ElasticPane(vertical3);
+const verticalPane4 = new ElasticPane(vertical4);
+
+const verticalLayout = new ElasticLayout(
+  [verticalPane1, verticalPane2, verticalPane3, verticalPane4],
+  {
+    direction: "vertical",
+  }
+);
+verticalLayout.apply();

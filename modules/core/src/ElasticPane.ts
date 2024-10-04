@@ -5,7 +5,16 @@ export class ElasticPane {
     this.element = element;
   }
 
-  public applySizePercentage(percentage: number) {
-    this.element.style.width = `${percentage}%`;
+  public applySizePercentage(
+    percentage: number,
+    direction: "vertical" | "horizontal"
+  ) {
+    const value = `${percentage}%`;
+
+    if (direction === "horizontal") {
+      this.element.style.width = value;
+    } else {
+      this.element.style.height = value;
+    }
   }
 }

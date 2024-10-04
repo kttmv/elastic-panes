@@ -1,32 +1,65 @@
-.elastic-resizer {
+.elastic-resizer-horizontal {
   background-color: blue;
   width: 4px;
   min-width: 4px;
 }
 
-.test-container {
-  display: flex;
-  height: 100vh;
+.elastic-resizer-vertical {
+  background-color: red;
+  height: 4px;
+  min-height: 4px;
 }
 
-#A,
-#B,
-#C,
-#D {
+.test-container-horizontal {
+  display: flex;
+  height: 33vh;
+}
+
+.test-container-vertical {
+  display: flex;
+  flex-direction: column;
+  height: 65vh
+}
+
+#horizontal_1,
+#horizontal_2,
+#horizontal_3,
+#horizontal_4 {
   width: 100%;
   color: black;
 }
 
-#A {
+#horizontal_1 {
   background-color: aqua;
 }
-#B {
+#horizontal_2 {
   background-color: aquamarine;
 }
-#C {
+#horizontal_3 {
   background-color: bisque;
 }
-#D {
+#horizontal_4 {
+  background-color: cadetblue;
+}
+
+#vertical_1,
+#vertical_2,
+#vertical_3,
+#vertical_4 {
+  height: 100%;
+  color: black;
+}
+
+#vertical_1 {
+  background-color: aqua;
+}
+#vertical_2 {
+  background-color: aquamarine;
+}
+#vertical_3 {
+  background-color: bisque;
+}
+#vertical_4 {
   background-color: cadetblue;
 }
 

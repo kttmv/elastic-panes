@@ -1,4 +1,3 @@
-import { getMousePositionInsideElement } from "./convert";
 import { ElasticPane } from "./ElasticPane";
 import { ElasticSplit } from "./ElasticSplit";
 
@@ -62,7 +61,8 @@ export class ElasticLayout {
     let totalSize = 0;
 
     for (const pane of this.panes) {
-      totalSize += pane.element.getBoundingClientRect().width;
+      const rect = pane.element.getBoundingClientRect();
+      totalSize += this.direction === "horizontal" ? rect.width : rect.height;
     }
 
     return totalSize;
@@ -74,7 +74,7 @@ export class ElasticLayout {
     }
 
     for (const pane of this.panes) {
-      pane.applySizePercentage(100 / this.panes.length);
+      pane.applySizePercentage(100 / this.panes.length, this.direction);
     }
   }
 }
