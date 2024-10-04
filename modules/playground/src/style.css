@@ -1,8 +1,8 @@
 .elastic-resizer-horizontal {
   cursor: col-resize;
   background-color: blue;
-  width: 4px;
-  min-width: 4px;
+  width: 32px;
+  min-width: 32px;
 }
 
 .elastic-resizer-vertical {

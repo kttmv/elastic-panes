@@ -21,18 +21,18 @@ const horizontal3 = document.getElementById("horizontal_3")!;
 const horizontal4 = document.getElementById("horizontal_4")!;
 
 const horizontalPane1 = new ElasticPane(horizontal1, {
-  initialSizePixels: 100,
-  minSize: 20,
+  initialSize: 20,
+  minSize: 10,
 });
 const horizontalPane2 = new ElasticPane(horizontal2, {
-  initialSize: 35,
+  initialSize: 20,
   minSize: 10,
 });
 const horizontalPane3 = new ElasticPane(horizontal3, {
   initialSize: 40,
 });
 const horizontalPane4 = new ElasticPane(horizontal4, {
-  initialSize: 10,
+  initialSize: 20,
 });
 
 const horizontalLayout = new ElasticLayout(
