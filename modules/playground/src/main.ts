@@ -12,6 +12,6 @@ const paneC = new ElasticPane(c);
 const paneD = new ElasticPane(d);
 
 const layout = new ElasticLayout([paneA, paneB, paneC, paneD], {
-  resizerWidth: 32,
+  direction: "horizontal",
 });
 layout.apply();

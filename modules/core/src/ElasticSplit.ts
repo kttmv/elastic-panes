@@ -6,30 +6,25 @@ export class ElasticSplit {
   public panes: readonly [ElasticPane, ElasticPane];
 
   private layout: ElasticLayout;
-  private splitPercentage: number;
   private parentElement: HTMLElement;
   private resizerElement: HTMLElement;
-  public resizerWidth: number;
+  private direction: "vertical" | "horizontal";
 
   constructor(
     layout: ElasticLayout,
     parentElement: HTMLElement,
     firstPane: ElasticPane,
     secondPane: ElasticPane,
-    resizerWidth: number
+    direction: "vertical" | "horizontal"
   ) {
     const resizerElement = document.createElement("div");
     resizerElement.className = "elastic-resizer";
-    resizerElement.style.width = `${resizerWidth}px`;
-    resizerElement.style.minWidth = `${resizerWidth}px`;
-    resizerElement.style.cursor = "col-resize";
 
     this.layout = layout;
     this.parentElement = parentElement;
     this.panes = [firstPane, secondPane];
-    this.splitPercentage = 0;
     this.resizerElement = resizerElement;
-    this.resizerWidth = resizerWidth;
+    this.direction = direction;
   }
 
   public apply() {
@@ -70,7 +65,8 @@ export class ElasticSplit {
 
       const offsetPosition = resizerStartPosition + offset;
 
-      const firstPaneWidth = offsetPosition - this.resizerWidth / 2;
+      const firstPaneWidth =
+        offsetPosition - this.resizerElement.getBoundingClientRect().width / 2;
       const secondPaneWidth = splitSize - firstPaneWidth;
 
       const firstPaneWidthRatioInsideSplit = firstPaneWidth / splitSize;
@@ -84,14 +80,8 @@ export class ElasticSplit {
       const firstPaneWidthPercentage = firstPaneWidthRatio * 100;
       const secondPaneWidthPercentage = secondPaneWidthRatio * 100;
 
-      this.panes[0].applyWidthPercentage(
-        firstPaneWidthPercentage,
-        this.resizerWidth
-      );
-      this.panes[1].applyWidthPercentage(
-        secondPaneWidthPercentage,
-        this.resizerWidth
-      );
+      this.panes[0].applyWidthPercentage(firstPaneWidthPercentage);
+      this.panes[1].applyWidthPercentage(secondPaneWidthPercentage);
     };
 
     const dragEnd = () => {
@@ -106,17 +96,6 @@ export class ElasticSplit {
     const firstRect = this.panes[0].element.getBoundingClientRect();
     const secondRect = this.panes[1].element.getBoundingClientRect();
 
-    let size = firstRect.width + secondRect.width;
-
-    // const splitIndex = this.layout.splits.indexOf(this);
-    // if (splitIndex > 0) {
-    //   size += this.layout.splits[splitIndex - 1].resizerWidth / 2;
-    // }
-
-    // if (splitIndex < this.layout.splits.length - 1) {
-    //   size += this.layout.splits[splitIndex + 1].resizerWidth / 2;
-    // }
-
-    return size;
+    return firstRect.width + secondRect.width;
   }
 }

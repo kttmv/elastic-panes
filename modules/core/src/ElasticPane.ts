@@ -5,8 +5,7 @@ export class ElasticPane {
     this.element = element;
   }
 
-  public applyWidthPercentage(percentage: number, resizerWidth: number) {
-    // this.element.style.width = `calc(${percentage}% - ${resizerWidth / 2}px)`;
+  public applyWidthPercentage(percentage: number) {
     this.element.style.width = `${percentage}%`;
   }
 }

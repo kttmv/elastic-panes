@@ -6,10 +6,24 @@ export class ElasticLayout {
   public panes: ElasticPane[];
   public splits: ElasticSplit[];
 
-  public resizerWidth: number;
   private parentElement: HTMLElement;
+  private direction: "vertical" | "horizontal";
 
-  constructor(panes: ElasticPane[], options: { resizerWidth: number }) {
+  constructor(
+    panes: ElasticPane[],
+    options: { direction?: "vertical" | "horizontal" }
+  ) {
+    if (
+      options.direction !== undefined &&
+      !["horizontal", "vertical"].includes(options.direction)
+    ) {
+      throw new Error(
+        `Unkown direction "${options.direction}". It must be either "horizontal" or "vertical"`
+      );
+    }
+
+    this.direction = options.direction ?? "horizontal";
+
     if (panes.length < 2) {
       throw new Error("At least 2 panes must be provided");
     }
@@ -34,7 +48,7 @@ export class ElasticLayout {
         parent,
         panes[i - 1],
         panes[i],
-        options.resizerWidth
+        this.direction
       );
       splits.push(split);
     }
@@ -42,7 +56,6 @@ export class ElasticLayout {
     this.panes = panes;
     this.splits = splits;
     this.parentElement = parent;
-    this.resizerWidth = options.resizerWidth;
   }
 
   public getSize() {
@@ -61,7 +74,7 @@ export class ElasticLayout {
     }
 
     for (const pane of this.panes) {
-      pane.applyWidthPercentage(100 / this.panes.length, this.resizerWidth);
+      pane.applyWidthPercentage(100 / this.panes.length);
     }
   }
 }
