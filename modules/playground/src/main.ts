@@ -22,11 +22,9 @@ const horizontal4 = document.getElementById("horizontal_4")!;
 
 const horizontalPane1 = new ElasticPane(horizontal1, {
   initialSize: 20,
-  minSize: 10,
 });
 const horizontalPane2 = new ElasticPane(horizontal2, {
   initialSize: 20,
-  minSize: 10,
 });
 const horizontalPane3 = new ElasticPane(horizontal3, {
   initialSize: 40,

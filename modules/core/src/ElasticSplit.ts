@@ -47,16 +47,30 @@ export class ElasticSplit {
 
   private getPositionWithinSplit(position: number) {
     const rect = this.panes[0].element.getBoundingClientRect();
+    const resizerRect = this.resizerElement.getBoundingClientRect();
+    const resizerSize =
+      this.direction === "horizontal" ? resizerRect.width : resizerRect.height;
 
     const relativePosition =
       position - (this.direction === "horizontal" ? rect.left : rect.top);
 
-    const relativePositionClamped = Math.max(
-      0,
-      Math.min(relativePosition, this.getSize())
+    // const relativePositionClamped = Math.max(
+    //   0,
+    //   Math.min(relativePosition, this.getSize() + resizerSize)
+    // );
+
+    return relativePosition;
+  }
+
+  public getResizerCenterPosition(): number {
+    const resizerRect = this.resizerElement.getBoundingClientRect();
+    const center = this.getPositionWithinSplit(
+      this.direction === "horizontal"
+        ? resizerRect.left + resizerRect.width / 2
+        : resizerRect.top + resizerRect.height / 2
     );
 
-    return relativePositionClamped;
+    return center;
   }
 
   private addDragHandler(): void {
@@ -68,12 +82,7 @@ export class ElasticSplit {
         this.direction === "horizontal" ? e.clientX : e.clientY
       );
 
-      const resizerRect = this.resizerElement.getBoundingClientRect();
-      resizerStartPosition = this.getPositionWithinSplit(
-        this.direction === "horizontal"
-          ? resizerRect.left + resizerRect.width / 2
-          : resizerRect.top + resizerRect.height / 2
-      );
+      resizerStartPosition = this.getResizerCenterPosition();
 
       document.addEventListener("mousemove", dragMove);
       document.addEventListener("mouseup", dragEnd);
@@ -98,7 +107,7 @@ export class ElasticSplit {
   }
 
   public updatePaneSizes(position: number): void {
-    console.log(position);
+    // console.log(position);
     const layoutSizePixels = this.layout.getSize();
     const splitSizePixels = this.getSize();
     const splitSizeRatio = splitSizePixels / layoutSizePixels;
@@ -133,8 +142,8 @@ export class ElasticSplit {
     let firstPaneMinSizePercents = this.panes[0].options.minSize;
     let secondPaneMinSizePercents = this.panes[1].options.minSize;
 
-    const firstPaneMinSizePixels = this.panes[0].options.minSizePixels;
-    const secondPaneMinSizePixels = this.panes[1].options.minSizePixels;
+    const firstPaneMinSizePixels = this.panes[0].options.minSizePixels ?? 0;
+    const secondPaneMinSizePixels = this.panes[1].options.minSizePixels ?? 0;
 
     if (
       firstPaneMinSizePercents === undefined &&
@@ -164,19 +173,22 @@ export class ElasticSplit {
 
       if (splitIndex > 0) {
         const previousSplit = this.layout.splits[splitIndex - 1];
-        const previousSplitFirstPaneSizeRect =
-          previousSplit.panes[0].element.getBoundingClientRect();
-        const previousSplitFirstPaneSizePixels =
-          this.direction === "horizontal"
-            ? previousSplitFirstPaneSizeRect.width
-            : previousSplitFirstPaneSizeRect.height;
 
-        const offset =
+        const position =
           ((firstPaneSizePercentage - firstPaneMinSizePercents) / 100) *
             splitSizePixels +
-          previousSplitFirstPaneSizePixels;
+          previousSplit.getResizerCenterPosition();
 
-        previousSplit.updatePaneSizes(offset);
+        // console.log(`split size: ${splitSizePixels}`);
+        // console.log(`firstPaneSizePercentage: ${firstPaneSizePercentage}`);
+        // console.log(`firstPaneMinSizePercents: ${firstPaneMinSizePercents}`);
+        // console.log(
+        //   "result: " +
+        //     ((firstPaneSizePercentage - firstPaneMinSizePercents) / 100) *
+        //       splitSizePixels
+        // );
+
+        previousSplit.updatePaneSizes(position);
       }
     } else if (
       secondPaneMinSizePercents !== undefined &&
@@ -187,19 +199,13 @@ export class ElasticSplit {
 
       if (splitIndex < this.layout.splits.length - 1) {
         const nextSplit = this.layout.splits[splitIndex + 1];
-        const nextSplitFirstPaneSizeRect =
-          nextSplit.panes[0].element.getBoundingClientRect();
-        const nextSplitFirstPaneSizePixels =
-          this.direction === "horizontal"
-            ? nextSplitFirstPaneSizeRect.width
-            : nextSplitFirstPaneSizeRect.height;
 
-        const offset =
+        const position =
           ((firstPaneSizePercentage - firstPaneSizePercentageClamped) / 100) *
             splitSizePixels +
-          nextSplitFirstPaneSizePixels;
+          nextSplit.getResizerCenterPosition();
 
-        nextSplit.updatePaneSizes(offset);
+        nextSplit.updatePaneSizes(position);
       }
     }
 
