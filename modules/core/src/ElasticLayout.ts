@@ -59,13 +59,13 @@ export class ElasticLayout {
   }
 
   public getSize() {
-    let totalWidth = 0;
+    let totalSize = 0;
 
     for (const pane of this.panes) {
-      totalWidth += pane.element.getBoundingClientRect().width;
+      totalSize += pane.element.getBoundingClientRect().width;
     }
 
-    return totalWidth;
+    return totalSize;
   }
 
   public apply() {
@@ -74,7 +74,7 @@ export class ElasticLayout {
     }
 
     for (const pane of this.panes) {
-      pane.applyWidthPercentage(100 / this.panes.length);
+      pane.applySizePercentage(100 / this.panes.length);
     }
   }
 }

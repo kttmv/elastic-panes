@@ -65,23 +65,22 @@ export class ElasticSplit {
 
       const offsetPosition = resizerStartPosition + offset;
 
-      const firstPaneWidth =
+      const firstPaneSize =
         offsetPosition - this.resizerElement.getBoundingClientRect().width / 2;
-      const secondPaneWidth = splitSize - firstPaneWidth;
+      const secondPaneSize = splitSize - firstPaneSize;
 
-      const firstPaneWidthRatioInsideSplit = firstPaneWidth / splitSize;
-      const secondPaneWidthRatioInsideSplit = secondPaneWidth / splitSize;
+      const firstPaneSizeRatioInsideSplit = firstPaneSize / splitSize;
+      const secondPaneSizeRatioInsideSplit = secondPaneSize / splitSize;
 
-      const firstPaneWidthRatio =
-        firstPaneWidthRatioInsideSplit * splitSizeRatio;
-      const secondPaneWidthRatio =
-        secondPaneWidthRatioInsideSplit * splitSizeRatio;
+      const firstPaneSizeRatio = firstPaneSizeRatioInsideSplit * splitSizeRatio;
+      const secondPaneSizeRatio =
+        secondPaneSizeRatioInsideSplit * splitSizeRatio;
 
-      const firstPaneWidthPercentage = firstPaneWidthRatio * 100;
-      const secondPaneWidthPercentage = secondPaneWidthRatio * 100;
+      const firstPaneSizePercentage = firstPaneSizeRatio * 100;
+      const secondPaneSizePercentage = secondPaneSizeRatio * 100;
 
-      this.panes[0].applyWidthPercentage(firstPaneWidthPercentage);
-      this.panes[1].applyWidthPercentage(secondPaneWidthPercentage);
+      this.panes[0].applySizePercentage(firstPaneSizePercentage);
+      this.panes[1].applySizePercentage(secondPaneSizePercentage);
     };
 
     const dragEnd = () => {
