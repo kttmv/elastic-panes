@@ -73,6 +73,37 @@ export class ElasticLayout {
       split.apply();
     }
 
+    let totalSizePercentage = 0;
+    let totalSizePixels = 0;
+
+    for (const pane of this.panes) {
+      if (pane.options.initialSizePercents !== undefined) {
+        totalSizePercentage += pane.options.initialSizePercents;
+      } else {
+        totalSizePixels += pane.options.initialSizePixels;
+      }
+    }
+
+    const parentRect = this.parentElement.getBoundingClientRect();
+    const availableSize =
+      this.direction === "horizontal" ? parentRect.width : parentRect.height;
+    const availableSizePercentage =
+      ((availableSize - totalSizePixels) / availableSize) * 100;
+
+    if (totalSizePercentage === 0) {
+      throw new Error(
+        "At least one pane should have initial size of greater than zero percents"
+      );
+    } else if (totalSizePercentage !== availableSizePercentage) {
+      const scaleFactor = availableSizePercentage / totalSizePercentage;
+
+      for (const pane of this.panes) {
+        if (pane.options.initialSizePercents !== undefined) {
+          pane.options.initialSizePercents *= scaleFactor;
+        }
+      }
+    }
+
     for (const pane of this.panes) {
       if (pane.options.initialSizePixels !== undefined) {
         pane.applySizePixels(pane.options.initialSizePixels, this.direction);

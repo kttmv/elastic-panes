@@ -1,10 +1,12 @@
 .elastic-resizer-horizontal {
+  cursor: col-resize;
   background-color: blue;
   width: 4px;
   min-width: 4px;
 }
 
 .elastic-resizer-vertical {
+  cursor: row-resize;
   background-color: red;
   height: 4px;
   min-height: 4px;

@@ -4,8 +4,8 @@ import { ElasticLayout, ElasticPane } from "@elastic-panes/core";
 const container1 = document.getElementById("test-container-horizontal")!;
 const container2 = document.getElementById("test-container-vertical")!;
 
-const containerPane1 = new ElasticPane(container1, { initialSizePercents: 50 });
-const containerPane2 = new ElasticPane(container2, { initialSizePercents: 50 });
+const containerPane1 = new ElasticPane(container1, { initialSizePercents: 30 });
+const containerPane2 = new ElasticPane(container2, { initialSizePercents: 70 });
 
 const containerLayout = new ElasticLayout([containerPane1, containerPane2], {
   direction: "vertical",
@@ -18,7 +18,7 @@ const horizontal3 = document.getElementById("horizontal_3")!;
 const horizontal4 = document.getElementById("horizontal_4")!;
 
 const horizontalPane1 = new ElasticPane(horizontal1, {
-  initialSizePixels: 15,
+  initialSizePixels: 100,
 });
 const horizontalPane2 = new ElasticPane(horizontal2, {
   initialSizePercents: 35,
@@ -44,7 +44,7 @@ const vertical3 = document.getElementById("vertical_3")!;
 const vertical4 = document.getElementById("vertical_4")!;
 
 const verticalPane1 = new ElasticPane(vertical1, { initialSizePercents: 10 });
-const verticalPane2 = new ElasticPane(vertical2, { initialSizePercents: 10 });
+const verticalPane2 = new ElasticPane(vertical2, { initialSizePixels: 120 });
 const verticalPane3 = new ElasticPane(vertical3, { initialSizePercents: 10 });
 const verticalPane4 = new ElasticPane(vertical4, { initialSizePercents: 70 });
 
