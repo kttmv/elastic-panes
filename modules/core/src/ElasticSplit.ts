@@ -85,20 +85,37 @@ export class ElasticSplit {
   }
 
   private updatePaneSizes(offsetPosition: number): void {
-    const layoutSize = this.layout.getSize();
-    const splitSize = this.getSize();
+    const layoutSizePixels = this.layout.getSize();
+    const splitSizePixels = this.getSize();
 
-    const splitSizeRatio = splitSize / layoutSize;
+    const splitSizeRatio = splitSizePixels / layoutSizePixels;
 
     const resizerRect = this.resizerElement.getBoundingClientRect();
-    const resizerSize =
+    const resizerSizePixels =
       this.direction === "horizontal" ? resizerRect.width : resizerRect.height;
 
-    const firstPaneSize = offsetPosition - resizerSize / 2;
-    const secondPaneSize = splitSize - firstPaneSize;
+    let firstPaneSizePixels = offsetPosition - resizerSizePixels / 2;
 
-    const firstPaneSizeRatioWithinSplit = firstPaneSize / splitSize;
-    const secondPaneSizeRatioWithinSplit = secondPaneSize / splitSize;
+    const firstPaneMinSizePixels = this.panes[0].options.minSizePixels;
+    const secondPaneMinSizePixels = this.panes[1].options.minSizePixels;
+
+    if (
+      firstPaneMinSizePixels !== undefined &&
+      firstPaneSizePixels < firstPaneMinSizePixels
+    ) {
+      firstPaneSizePixels = this.panes[0].options.minSizePixels;
+    } else if (
+      secondPaneMinSizePixels !== undefined &&
+      splitSizePixels - firstPaneSizePixels < secondPaneMinSizePixels
+    ) {
+      firstPaneSizePixels = splitSizePixels - secondPaneMinSizePixels;
+    }
+
+    let secondPaneSizePixels = splitSizePixels - firstPaneSizePixels;
+
+    const firstPaneSizeRatioWithinSplit = firstPaneSizePixels / splitSizePixels;
+    const secondPaneSizeRatioWithinSplit =
+      secondPaneSizePixels / splitSizePixels;
 
     const firstPaneSizePercentage =
       firstPaneSizeRatioWithinSplit * splitSizeRatio * 100;

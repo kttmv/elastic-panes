@@ -77,8 +77,8 @@ export class ElasticLayout {
     let totalSizePixels = 0;
 
     for (const pane of this.panes) {
-      if (pane.options.initialSizePercents !== undefined) {
-        totalSizePercentage += pane.options.initialSizePercents;
+      if (pane.options.initialSize !== undefined) {
+        totalSizePercentage += pane.options.initialSize;
       } else {
         totalSizePixels += pane.options.initialSizePixels;
       }
@@ -98,8 +98,8 @@ export class ElasticLayout {
       const scaleFactor = availableSizePercentage / totalSizePercentage;
 
       for (const pane of this.panes) {
-        if (pane.options.initialSizePercents !== undefined) {
-          pane.options.initialSizePercents *= scaleFactor;
+        if (pane.options.initialSize !== undefined) {
+          pane.options.initialSize *= scaleFactor;
         }
       }
     }
@@ -108,10 +108,7 @@ export class ElasticLayout {
       if (pane.options.initialSizePixels !== undefined) {
         pane.applySizePixels(pane.options.initialSizePixels, this.direction);
       } else {
-        pane.applySizePercentage(
-          pane.options.initialSizePercents,
-          this.direction
-        );
+        pane.applySizePercentage(pane.options.initialSize, this.direction);
       }
     }
   }
