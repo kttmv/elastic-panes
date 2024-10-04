@@ -74,7 +74,14 @@ export class ElasticLayout {
     }
 
     for (const pane of this.panes) {
-      pane.applySizePercentage(100 / this.panes.length, this.direction);
+      if (pane.options.initialSizePixels !== undefined) {
+        pane.applySizePixels(pane.options.initialSizePixels, this.direction);
+      } else {
+        pane.applySizePercentage(
+          pane.options.initialSizePercents,
+          this.direction
+        );
+      }
     }
   }
 }
