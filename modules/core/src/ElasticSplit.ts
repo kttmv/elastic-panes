@@ -73,23 +73,23 @@ export class ElasticSplit {
       const firstPaneWidth = offsetPosition - this.resizerWidth / 2;
       const secondPaneWidth = splitSize - firstPaneWidth;
 
-      const newFirstPaneWidthRatioInsideSplit = firstPaneWidth / splitSize;
-      const newSecondPaneWidthRatioInsideSplit = secondPaneWidth / splitSize;
+      const firstPaneWidthRatioInsideSplit = firstPaneWidth / splitSize;
+      const secondPaneWidthRatioInsideSplit = secondPaneWidth / splitSize;
 
-      const newFirstPaneWidthRatio =
-        newFirstPaneWidthRatioInsideSplit * splitSizeRatio;
-      const newSecondPaneWidthRatio =
-        newSecondPaneWidthRatioInsideSplit * splitSizeRatio;
+      const firstPaneWidthRatio =
+        firstPaneWidthRatioInsideSplit * splitSizeRatio;
+      const secondPaneWidthRatio =
+        secondPaneWidthRatioInsideSplit * splitSizeRatio;
 
-      const newFirstPaneWidthPercentage = newFirstPaneWidthRatio * 100;
-      const newSecondPaneWidthPercentage = newSecondPaneWidthRatio * 100;
+      const firstPaneWidthPercentage = firstPaneWidthRatio * 100;
+      const secondPaneWidthPercentage = secondPaneWidthRatio * 100;
 
       this.panes[0].applyWidthPercentage(
-        newFirstPaneWidthPercentage,
+        firstPaneWidthPercentage,
         this.resizerWidth
       );
       this.panes[1].applyWidthPercentage(
-        newSecondPaneWidthPercentage,
+        secondPaneWidthPercentage,
         this.resizerWidth
       );
     };
