@@ -10,12 +10,18 @@
   min-height: 4px;
 }
 
-.test-container-horizontal {
+#test-container {
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#test-container-horizontal {
   display: flex;
   height: 33vh;
 }
 
-.test-container-vertical {
+#test-container-vertical {
   display: flex;
   flex-direction: column;
   height: 65vh

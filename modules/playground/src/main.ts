@@ -1,6 +1,17 @@
 import "./style.css";
 import { ElasticLayout, ElasticPane } from "@elastic-panes/core";
 
+const container1 = document.getElementById("test-container-horizontal")!;
+const container2 = document.getElementById("test-container-vertical")!;
+
+const containerPane1 = new ElasticPane(container1);
+const containerPane2 = new ElasticPane(container2);
+
+const containerLayout = new ElasticLayout([containerPane1, containerPane2], {
+  direction: "vertical",
+});
+containerLayout.apply();
+
 const horizontal1 = document.getElementById("horizontal_1")!;
 const horizontal2 = document.getElementById("horizontal_2")!;
 const horizontal3 = document.getElementById("horizontal_3")!;
