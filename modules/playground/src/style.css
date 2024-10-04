@@ -1,0 +1,44 @@
+.elastic-resizer {
+  background-color: blue;
+}
+
+.test-container {
+  display: flex;
+  height: 100vh;
+}
+
+#A,
+#B,
+#C,
+#D {
+  width: 100%;
+  color: black;
+}
+
+#A {
+  background-color: aqua;
+}
+#B {
+  background-color: aquamarine;
+}
+#C {
+  background-color: bisque;
+}
+#D {
+  background-color: cadetblue;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

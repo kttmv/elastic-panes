@@ -1,0 +1,22 @@
+{
+  "name": "@elastic-panes/core",
+  "version": "0.0.1",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "main": "dist/bundle.min.js",
+  "scripts": {
+    "build": "rollup -c",
+    "format": "prettier . --write"
+  },
+  "keywords": [
+    "resizable",
+    "panels",
+    "split",
+    "panes",
+    "splitter",
+    "resize"
+  ],
+  "author": "Vladislav Mamenko (kttmv)",
+  "license": "MIT",
+  "description": ""
+}

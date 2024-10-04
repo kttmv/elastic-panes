@@ -1,0 +1,122 @@
+import { getPositionInsideSplit } from "./convert";
+import { ElasticLayout } from "./ElasticLayout";
+import { ElasticPane } from "./ElasticPane";
+
+export class ElasticSplit {
+  public panes: readonly [ElasticPane, ElasticPane];
+
+  private layout: ElasticLayout;
+  private splitPercentage: number;
+  private parentElement: HTMLElement;
+  private resizerElement: HTMLElement;
+  public resizerWidth: number;
+
+  constructor(
+    layout: ElasticLayout,
+    parentElement: HTMLElement,
+    firstPane: ElasticPane,
+    secondPane: ElasticPane,
+    resizerWidth: number
+  ) {
+    const resizerElement = document.createElement("div");
+    resizerElement.className = "elastic-resizer";
+    resizerElement.style.width = `${resizerWidth}px`;
+    resizerElement.style.minWidth = `${resizerWidth}px`;
+    resizerElement.style.cursor = "col-resize";
+
+    this.layout = layout;
+    this.parentElement = parentElement;
+    this.panes = [firstPane, secondPane];
+    this.splitPercentage = 0;
+    this.resizerElement = resizerElement;
+    this.resizerWidth = resizerWidth;
+  }
+
+  public apply() {
+    this.parentElement.insertBefore(this.resizerElement, this.panes[1].element);
+
+    this.addDragHandler();
+  }
+
+  private addDragHandler() {
+    let dragStartPosition: number;
+    let resizerStartPosition: number;
+
+    const dragStart = (e: MouseEvent) => {
+      dragStartPosition = getPositionInsideSplit(e.clientX, this);
+
+      const resizerBoundingClientRect =
+        this.resizerElement.getBoundingClientRect();
+
+      console.log(resizerBoundingClientRect);
+
+      resizerStartPosition = getPositionInsideSplit(
+        resizerBoundingClientRect.left + resizerBoundingClientRect.width / 2,
+        this
+      );
+
+      document.addEventListener("mousemove", dragMove);
+      document.addEventListener("mouseup", dragEnd);
+    };
+
+    const dragMove = (e: MouseEvent) => {
+      const parentSize = this.layout.getSize();
+      const splitSize = this.getSize();
+      const splitSizeRatio = splitSize / parentSize;
+
+      const mousePosition = getPositionInsideSplit(e.clientX, this);
+
+      const offset = mousePosition - dragStartPosition;
+
+      const offsetPosition = resizerStartPosition + offset;
+
+      const firstPaneWidth = offsetPosition - this.resizerWidth / 2;
+      const secondPaneWidth = splitSize - firstPaneWidth;
+
+      const newFirstPaneWidthRatioInsideSplit = firstPaneWidth / splitSize;
+      const newSecondPaneWidthRatioInsideSplit = secondPaneWidth / splitSize;
+
+      const newFirstPaneWidthRatio =
+        newFirstPaneWidthRatioInsideSplit * splitSizeRatio;
+      const newSecondPaneWidthRatio =
+        newSecondPaneWidthRatioInsideSplit * splitSizeRatio;
+
+      const newFirstPaneWidthPercentage = newFirstPaneWidthRatio * 100;
+      const newSecondPaneWidthPercentage = newSecondPaneWidthRatio * 100;
+
+      this.panes[0].applyWidthPercentage(
+        newFirstPaneWidthPercentage,
+        this.resizerWidth
+      );
+      this.panes[1].applyWidthPercentage(
+        newSecondPaneWidthPercentage,
+        this.resizerWidth
+      );
+    };
+
+    const dragEnd = () => {
+      document.removeEventListener("mousemove", dragMove);
+      document.removeEventListener("mouseup", dragEnd);
+    };
+
+    this.resizerElement.addEventListener("mousedown", dragStart);
+  }
+
+  public getSize() {
+    const firstRect = this.panes[0].element.getBoundingClientRect();
+    const secondRect = this.panes[1].element.getBoundingClientRect();
+
+    let size = firstRect.width + secondRect.width;
+
+    // const splitIndex = this.layout.splits.indexOf(this);
+    // if (splitIndex > 0) {
+    //   size += this.layout.splits[splitIndex - 1].resizerWidth / 2;
+    // }
+
+    // if (splitIndex < this.layout.splits.length - 1) {
+    //   size += this.layout.splits[splitIndex + 1].resizerWidth / 2;
+    // }
+
+    return size;
+  }
+}
