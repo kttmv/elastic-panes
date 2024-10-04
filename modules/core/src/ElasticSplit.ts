@@ -103,7 +103,7 @@ export class ElasticSplit {
       firstPaneMinSizePixels !== undefined &&
       firstPaneSizePixels < firstPaneMinSizePixels
     ) {
-      firstPaneSizePixels = this.panes[0].options.minSizePixels;
+      firstPaneSizePixels = firstPaneMinSizePixels;
     } else if (
       secondPaneMinSizePixels !== undefined &&
       splitSizePixels - firstPaneSizePixels < secondPaneMinSizePixels
@@ -114,13 +114,28 @@ export class ElasticSplit {
     let secondPaneSizePixels = splitSizePixels - firstPaneSizePixels;
 
     const firstPaneSizeRatioWithinSplit = firstPaneSizePixels / splitSizePixels;
-    const secondPaneSizeRatioWithinSplit =
-      secondPaneSizePixels / splitSizePixels;
 
-    const firstPaneSizePercentage =
+    let firstPaneSizePercentage =
       firstPaneSizeRatioWithinSplit * splitSizeRatio * 100;
-    const secondPaneSizePercentage =
-      secondPaneSizeRatioWithinSplit * splitSizeRatio * 100;
+
+    const firstPaneMinSizePercents = this.panes[0].options.minSize;
+    const secondPaneMinSizePercents = this.panes[1].options.minSize;
+
+    if (
+      firstPaneMinSizePercents !== undefined &&
+      firstPaneSizePercentage < firstPaneMinSizePercents
+    ) {
+      firstPaneSizePercentage = firstPaneMinSizePercents;
+    } else if (
+      secondPaneMinSizePercents !== undefined &&
+      splitSizeRatio * 100 - firstPaneSizePercentage < secondPaneMinSizePercents
+    ) {
+      firstPaneSizePercentage =
+        splitSizeRatio * 100 - secondPaneMinSizePercents;
+    }
+
+    let secondPaneSizePercentage =
+      splitSizeRatio * 100 - firstPaneSizePercentage;
 
     this.panes[0].applySizePercentage(firstPaneSizePercentage, this.direction);
     this.panes[1].applySizePercentage(secondPaneSizePercentage, this.direction);

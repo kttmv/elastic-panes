@@ -6,6 +6,7 @@ const container2 = document.getElementById("test-container-vertical")!;
 
 const containerPane1 = new ElasticPane(container1, {
   initialSize: 30,
+  minSize: 30,
 });
 const containerPane2 = new ElasticPane(container2, { initialSize: 70 });
 
@@ -21,11 +22,11 @@ const horizontal4 = document.getElementById("horizontal_4")!;
 
 const horizontalPane1 = new ElasticPane(horizontal1, {
   initialSizePixels: 100,
-  minSizePixels: 50,
+  minSize: 20,
 });
 const horizontalPane2 = new ElasticPane(horizontal2, {
   initialSize: 35,
-  minSizePixels: 50,
+  minSize: 10,
 });
 const horizontalPane3 = new ElasticPane(horizontal3, {
   initialSize: 40,
