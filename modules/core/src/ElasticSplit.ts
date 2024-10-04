@@ -17,6 +17,11 @@ export class ElasticSplit {
     this.resizerElement = this.createResizerElement();
   }
 
+  public apply(): void {
+    this.parentElement.insertBefore(this.resizerElement, this.panes[1].element);
+    this.addDragHandler();
+  }
+
   private createResizerElement(): HTMLElement {
     const resizerElement = document.createElement("div");
 
@@ -29,7 +34,7 @@ export class ElasticSplit {
     return resizerElement;
   }
 
-  public getSize(): number {
+  private getSize(): number {
     const [firstRect, secondRect] = this.panes.map((pane) =>
       pane.element.getBoundingClientRect()
     );
@@ -41,9 +46,18 @@ export class ElasticSplit {
     }
   }
 
-  public apply(): void {
-    this.parentElement.insertBefore(this.resizerElement, this.panes[1].element);
-    this.addDragHandler();
+  private getPositionWithinSplit(position: number) {
+    const rect = this.panes[0].element.getBoundingClientRect();
+
+    const relativePosition =
+      position - (this.direction === "horizontal" ? rect.left : rect.top);
+
+    const relativePositionClamped = Math.max(
+      0,
+      Math.min(relativePosition, this.getSize())
+    );
+
+    return relativePositionClamped;
   }
 
   private addDragHandler(): void {
@@ -87,15 +101,41 @@ export class ElasticSplit {
   private updatePaneSizes(offsetPosition: number): void {
     const layoutSizePixels = this.layout.getSize();
     const splitSizePixels = this.getSize();
-
     const splitSizeRatio = splitSizePixels / layoutSizePixels;
 
+    const resizerSizePixels = this.getResizerSize();
+
+    let firstPaneSizePixels = this.calculateFirstPaneSizePixels(
+      offsetPosition,
+      resizerSizePixels,
+      splitSizePixels
+    );
+
+    const firstPaneSizeRatioWithinSplit = firstPaneSizePixels / splitSizePixels;
+    let firstPaneSizePercentage =
+      firstPaneSizeRatioWithinSplit * splitSizeRatio * 100;
+
+    firstPaneSizePercentage = this.adjustFirstPaneSizePercentage(
+      firstPaneSizePercentage,
+      splitSizeRatio
+    );
+
+    this.applyPaneSizes(firstPaneSizePercentage, splitSizeRatio);
+  }
+
+  private getResizerSize(): number {
     const resizerRect = this.resizerElement.getBoundingClientRect();
-    const resizerSizePixels =
-      this.direction === "horizontal" ? resizerRect.width : resizerRect.height;
+    return this.direction === "horizontal"
+      ? resizerRect.width
+      : resizerRect.height;
+  }
 
+  private calculateFirstPaneSizePixels(
+    offsetPosition: number,
+    resizerSizePixels: number,
+    splitSizePixels: number
+  ): number {
     let firstPaneSizePixels = offsetPosition - resizerSizePixels / 2;
-
     const firstPaneMinSizePixels = this.panes[0].options.minSizePixels;
     const secondPaneMinSizePixels = this.panes[1].options.minSizePixels;
 
@@ -111,13 +151,13 @@ export class ElasticSplit {
       firstPaneSizePixels = splitSizePixels - secondPaneMinSizePixels;
     }
 
-    let secondPaneSizePixels = splitSizePixels - firstPaneSizePixels;
+    return firstPaneSizePixels;
+  }
 
-    const firstPaneSizeRatioWithinSplit = firstPaneSizePixels / splitSizePixels;
-
-    let firstPaneSizePercentage =
-      firstPaneSizeRatioWithinSplit * splitSizeRatio * 100;
-
+  private adjustFirstPaneSizePercentage(
+    firstPaneSizePercentage: number,
+    splitSizeRatio: number
+  ): number {
     const firstPaneMinSizePercents = this.panes[0].options.minSize;
     const secondPaneMinSizePercents = this.panes[1].options.minSize;
 
@@ -134,24 +174,16 @@ export class ElasticSplit {
         splitSizeRatio * 100 - secondPaneMinSizePercents;
     }
 
-    let secondPaneSizePercentage =
-      splitSizeRatio * 100 - firstPaneSizePercentage;
-
-    this.panes[0].applySizePercentage(firstPaneSizePercentage, this.direction);
-    this.panes[1].applySizePercentage(secondPaneSizePercentage, this.direction);
+    return firstPaneSizePercentage;
   }
 
-  private getPositionWithinSplit(position: number) {
-    const rect = this.panes[0].element.getBoundingClientRect();
-
-    const relativePosition =
-      position - (this.direction === "horizontal" ? rect.left : rect.top);
-
-    const relativePositionClamped = Math.max(
-      0,
-      Math.min(relativePosition, this.getSize())
-    );
-
-    return relativePositionClamped;
+  private applyPaneSizes(
+    firstPaneSizePercentage: number,
+    splitSizeRatio: number
+  ): void {
+    const secondPaneSizePercentage =
+      splitSizeRatio * 100 - firstPaneSizePercentage;
+    this.panes[0].applySizePercentage(firstPaneSizePercentage, this.direction);
+    this.panes[1].applySizePercentage(secondPaneSizePercentage, this.direction);
   }
 }
