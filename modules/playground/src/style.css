@@ -1,5 +1,7 @@
 .elastic-resizer {
   background-color: blue;
+  width: 4px;
+  min-width: 4px;
 }
 
 .test-container {
