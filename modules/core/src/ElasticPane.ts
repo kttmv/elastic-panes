@@ -22,6 +22,12 @@ export class ElasticPane {
         "Initial size must be set either as pixels or as percents, not both"
       );
     }
+
+    if (options.minSize !== undefined && options.minSizePixels !== undefined) {
+      throw new Error(
+        "Minimal size must be set either as pixels or as percents, not both"
+      );
+    }
   }
 
   public applySizePercentage(

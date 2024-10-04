@@ -6,7 +6,7 @@ const container2 = document.getElementById("test-container-vertical")!;
 
 const containerPane1 = new ElasticPane(container1, {
   initialSize: 30,
-  minSize: 30,
+  minSizePixels: 30,
 });
 const containerPane2 = new ElasticPane(container2, { initialSize: 70 });
 
