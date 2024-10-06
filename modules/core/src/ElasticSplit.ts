@@ -101,7 +101,7 @@ export class ElasticSplit {
 
       const position = resizerStartPosition + mousePosition - dragStartPosition;
 
-      this.updatePaneSizes(position, true, true, true);
+      this.updatePaneSizes(position, true, true);
     };
 
     const dragEnd = (): void => {
@@ -114,9 +114,8 @@ export class ElasticSplit {
 
   public updatePaneSizes(
     newResizerPosition: number,
-    updateFirstPaneSize: boolean,
-    updateSecondPaneSize: boolean,
-    test?: boolean
+    applyFirstPaneSize: boolean,
+    applySecondPaneSize: boolean
   ): [number, number] {
     const layoutSizePixels = this.layout.getSize();
     const splitSizePixels = this.getSize();
@@ -156,10 +155,19 @@ export class ElasticSplit {
           newSplitSizePercentage
         : 0;
 
-    this.applyPaneSizes(
-      updateFirstPaneSize ? firstPaneSizePercentage : undefined,
-      updateSecondPaneSize ? secondPaneSizePercentage : undefined
-    );
+    if (applyFirstPaneSize) {
+      this.panes[0].applySizePercentage(
+        firstPaneSizePercentage,
+        this.direction
+      );
+    }
+
+    if (applySecondPaneSize) {
+      this.panes[1].applySizePercentage(
+        secondPaneSizePercentage,
+        this.direction
+      );
+    }
 
     return [
       firstPaneSizePixelsClamped - paneSizesBeforeUpdate[0],
@@ -243,24 +251,5 @@ export class ElasticSplit {
     }
 
     return [firstPaneSizePixelsClamped, secondPaneSizePixelsClamped];
-  }
-
-  private applyPaneSizes(
-    firstPaneSizePercentage?: number,
-    secondPaneSizePercentage?: number
-  ): void {
-    if (firstPaneSizePercentage !== undefined) {
-      this.panes[0].applySizePercentage(
-        firstPaneSizePercentage,
-        this.direction
-      );
-    }
-
-    if (secondPaneSizePercentage !== undefined) {
-      this.panes[1].applySizePercentage(
-        secondPaneSizePercentage,
-        this.direction
-      );
-    }
   }
 }
