@@ -1,27 +1,31 @@
 import { ElasticPane } from "./ElasticPane";
 import { ElasticSplit } from "./ElasticSplit";
+import { Direction } from "./types";
+
+export type ElasticLayoutOptions = {
+  direction?: Direction;
+  snapDistance?: number;
+};
 
 export class ElasticLayout {
-  public panes: ElasticPane[];
-  public splits: ElasticSplit[];
+  public readonly panes: ElasticPane[];
+  public readonly splits: ElasticSplit[];
 
+  private readonly parentElement: HTMLElement;
+
+  public readonly direction: Direction;
   private parentElement: HTMLElement;
   private direction: "vertical" | "horizontal";
 
   constructor(
     panes: ElasticPane[],
-    options: { direction?: "vertical" | "horizontal" }
+    { direction = "horizontal", snapDistance = 10 }: ElasticLayoutOptions
   ) {
-    if (
-      options.direction !== undefined &&
-      !["horizontal", "vertical"].includes(options.direction)
-    ) {
+    if (direction !== "horizontal" && direction !== "vertical") {
       throw new Error(
-        `Unkown direction "${options.direction}". It must be either "horizontal" or "vertical"`
+        `Unkown direction "${direction}". It must be either "horizontal" or "vertical"`
       );
     }
-
-    this.direction = options.direction ?? "horizontal";
 
     if (panes.length < 2) {
       throw new Error("At least 2 panes must be provided");
@@ -38,17 +42,13 @@ export class ElasticLayout {
       }
     }
 
+    this.direction = direction;
+
     const splits: ElasticSplit[] = [];
     for (let i = 0; i < panes.length; i++) {
       if (i === 0) continue;
 
-      const split = new ElasticSplit(
-        this,
-        parent,
-        panes[i - 1],
-        panes[i],
-        this.direction
-      );
+      const split = new ElasticSplit(this, parent, panes[i - 1], panes[i]);
       splits.push(split);
     }
 
