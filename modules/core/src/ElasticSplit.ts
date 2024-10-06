@@ -106,77 +106,79 @@ export class ElasticSplit {
     this.resizerElement.addEventListener("mousedown", dragStart);
   }
 
-  public updatePaneSizes(position: number): void {
-    // console.log(position);
+  public updatePaneSizes(positionWithinSplit: number): void {
     const layoutSizePixels = this.layout.getSize();
     const splitSizePixels = this.getSize();
-    const splitSizeRatio = splitSizePixels / layoutSizePixels;
+    const splitSizePercentage = (splitSizePixels / layoutSizePixels) * 100;
 
     const resizerRect = this.resizerElement.getBoundingClientRect();
     const resizerSizePixels =
       this.direction === "horizontal" ? resizerRect.width : resizerRect.height;
 
-    let firstPaneSizePixels = position - resizerSizePixels / 2;
+    let firstPaneSizePixels = positionWithinSplit - resizerSizePixels / 2;
 
-    const firstPaneSizeRatioWithinSplit = firstPaneSizePixels / splitSizePixels;
-    let firstPaneSizePercentage =
-      firstPaneSizeRatioWithinSplit * splitSizeRatio * 100;
-
-    firstPaneSizePercentage = this.clampFirstPaneSizeToMinSizes(
-      firstPaneSizePercentage,
-      splitSizePixels,
-      splitSizeRatio
+    firstPaneSizePixels = this.clampFirstPaneSizeToMinSizes(
+      firstPaneSizePixels,
+      layoutSizePixels,
+      splitSizePixels
     );
 
+    const firstPaneSizeRatioWithinSplit =
+      splitSizePixels === 0 ? 0 : firstPaneSizePixels / splitSizePixels;
+    let firstPaneSizePercentage =
+      firstPaneSizeRatioWithinSplit * splitSizePercentage;
+
     const secondPaneSizePercentage =
-      splitSizeRatio * 100 - firstPaneSizePercentage;
+      splitSizePercentage - firstPaneSizePercentage;
+
+    console.log(secondPaneSizePercentage);
 
     this.applyPaneSizes(firstPaneSizePercentage, secondPaneSizePercentage);
   }
 
   private clampFirstPaneSizeToMinSizes(
-    firstPaneSizePercentage: number,
-    splitSizePixels: number,
-    splitSizeRatio: number
+    firstPaneSizeToApplyPixels: number,
+    layoutSizePixels: number,
+    splitSizePixels: number
   ): number {
-    let firstPaneMinSizePercents = this.panes[0].options.minSize;
-    let secondPaneMinSizePercents = this.panes[1].options.minSize;
+    const firstPaneMinSizePercents = this.panes[0].options.minSize;
+    const secondPaneMinSizePercents = this.panes[1].options.minSize;
 
-    const firstPaneMinSizePixels = this.panes[0].options.minSizePixels ?? 0;
-    const secondPaneMinSizePixels = this.panes[1].options.minSizePixels ?? 0;
+    let firstPaneMinSizePixels = this.panes[0].options.minSizePixels ?? 0;
+    let secondPaneMinSizePixels = this.panes[1].options.minSizePixels ?? 0;
 
     if (
-      firstPaneMinSizePercents === undefined &&
-      firstPaneMinSizePixels !== undefined
+      firstPaneMinSizePixels === undefined &&
+      firstPaneMinSizePercents !== undefined
     ) {
-      firstPaneMinSizePercents =
-        (firstPaneMinSizePixels / splitSizePixels) * 100 * splitSizeRatio;
+      firstPaneMinSizePixels =
+        (layoutSizePixels * firstPaneMinSizePercents) / 100;
     }
 
     if (
-      secondPaneMinSizePercents === undefined &&
-      secondPaneMinSizePixels !== undefined
+      secondPaneMinSizePixels === undefined &&
+      secondPaneMinSizePercents !== undefined
     ) {
-      secondPaneMinSizePercents =
-        (secondPaneMinSizePixels / splitSizePixels) * 100 * splitSizeRatio;
+      secondPaneMinSizePixels =
+        (layoutSizePixels * secondPaneMinSizePercents) / 100;
     }
 
-    let firstPaneSizePercentageClamped = firstPaneSizePercentage;
+    let firstPaneSizePixelsClamped = firstPaneSizeToApplyPixels;
 
     const splitIndex = this.layout.splits.indexOf(this);
 
     if (
-      firstPaneMinSizePercents !== undefined &&
-      firstPaneSizePercentage < firstPaneMinSizePercents
+      firstPaneMinSizePixels !== undefined &&
+      firstPaneSizeToApplyPixels < firstPaneMinSizePixels
     ) {
-      firstPaneSizePercentageClamped = firstPaneMinSizePercents;
+      firstPaneSizePixelsClamped = firstPaneMinSizePixels;
 
       if (splitIndex > 0) {
         const previousSplit = this.layout.splits[splitIndex - 1];
 
         const position =
-          ((firstPaneSizePercentage - firstPaneMinSizePercents) / 100) *
-            splitSizePixels +
+          firstPaneSizeToApplyPixels -
+          firstPaneMinSizePixels +
           previousSplit.getResizerCenterPosition();
 
         // console.log(`split size: ${splitSizePixels}`);
@@ -188,28 +190,34 @@ export class ElasticSplit {
         //       splitSizePixels
         // );
 
+        // const previousSplitFirstPaneRect =
+        //   previousSplit.panes[0].element.getBoundingClientRect();
+        // const previousSplitFirstPaneSize =
+        //   this.direction === "horizontal"
+        //     ? previousSplitFirstPaneRect.width
+        //     : previousSplitFirstPaneRect.height;
+
         previousSplit.updatePaneSizes(position);
       }
     } else if (
-      secondPaneMinSizePercents !== undefined &&
-      splitSizeRatio * 100 - firstPaneSizePercentage < secondPaneMinSizePercents
+      secondPaneMinSizePixels !== undefined &&
+      firstPaneSizeToApplyPixels > splitSizePixels - secondPaneMinSizePixels
     ) {
-      firstPaneSizePercentageClamped =
-        splitSizeRatio * 100 - secondPaneMinSizePercents;
+      firstPaneSizePixelsClamped = splitSizePixels - secondPaneMinSizePixels;
 
       if (splitIndex < this.layout.splits.length - 1) {
         const nextSplit = this.layout.splits[splitIndex + 1];
 
         const position =
-          ((firstPaneSizePercentage - firstPaneSizePercentageClamped) / 100) *
-            splitSizePixels +
+          firstPaneSizeToApplyPixels -
+          firstPaneSizePixelsClamped +
           nextSplit.getResizerCenterPosition();
 
         nextSplit.updatePaneSizes(position);
       }
     }
 
-    return firstPaneSizePercentageClamped;
+    return firstPaneSizePixelsClamped;
   }
 
   private applyPaneSizes(

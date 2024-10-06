@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "types": "dist/index.d.ts",
-  "main": "dist/bundle.min.js",
+  "main": "dist/bundle.js",
   "scripts": {
     "build": "rollup -c",
     "format": "prettier . --write"
