@@ -24,9 +24,9 @@ export class ElasticSplit {
   private createResizerElement(): HTMLElement {
     const resizerElement = document.createElement("div");
 
-    console.log(this.layout.direction);
+    console.log(this.layout.options.direction);
 
-    if (this.layout.direction === "horizontal") {
+    if (this.layout.options.direction === "horizontal") {
       console.log("asdf");
       resizerElement.className = "elastic-resizer-horizontal";
     } else {
@@ -40,7 +40,7 @@ export class ElasticSplit {
     const firstRect = this.panes[0].element.getBoundingClientRect();
     const secondRect = this.panes[1].element.getBoundingClientRect();
 
-    if (this.layout.direction === "horizontal") {
+    if (this.layout.options.direction === "horizontal") {
       return firstRect.width + secondRect.width;
     } else {
       return firstRect.height + secondRect.height;
@@ -51,7 +51,7 @@ export class ElasticSplit {
     const firstRect = this.panes[0].element.getBoundingClientRect();
     const secondRect = this.panes[1].element.getBoundingClientRect();
 
-    if (this.layout.direction === "horizontal") {
+    if (this.layout.options.direction === "horizontal") {
       return [firstRect.width, secondRect.width];
     } else {
       return [firstRect.height, secondRect.height];
@@ -62,13 +62,13 @@ export class ElasticSplit {
     const rect = this.panes[0].element.getBoundingClientRect();
     const resizerRect = this.resizerElement.getBoundingClientRect();
     const resizerSize =
-      this.layout.direction === "horizontal"
+      this.layout.options.direction === "horizontal"
         ? resizerRect.width
         : resizerRect.height;
 
     const relativePosition =
       position -
-      (this.layout.direction === "horizontal" ? rect.left : rect.top);
+      (this.layout.options.direction === "horizontal" ? rect.left : rect.top);
 
     return relativePosition;
   }
@@ -76,7 +76,7 @@ export class ElasticSplit {
   public getResizerCenterPosition(): number {
     const resizerRect = this.resizerElement.getBoundingClientRect();
     const center = this.getPositionWithinSplit(
-      this.layout.direction === "horizontal"
+      this.layout.options.direction === "horizontal"
         ? resizerRect.left + resizerRect.width / 2
         : resizerRect.top + resizerRect.height / 2
     );
@@ -90,7 +90,7 @@ export class ElasticSplit {
 
     const dragStart = (e: MouseEvent): void => {
       dragStartPosition = this.getPositionWithinSplit(
-        this.layout.direction === "horizontal" ? e.clientX : e.clientY
+        this.layout.options.direction === "horizontal" ? e.clientX : e.clientY
       );
 
       resizerStartPosition = this.getResizerCenterPosition();
@@ -101,7 +101,7 @@ export class ElasticSplit {
 
     const dragMove = (e: MouseEvent): void => {
       const mousePosition = this.getPositionWithinSplit(
-        this.layout.direction === "horizontal" ? e.clientX : e.clientY
+        this.layout.options.direction === "horizontal" ? e.clientX : e.clientY
       );
 
       const position = resizerStartPosition + mousePosition - dragStartPosition;
@@ -129,7 +129,7 @@ export class ElasticSplit {
 
     const resizerRect = this.resizerElement.getBoundingClientRect();
     const resizerSizePixels =
-      this.layout.direction === "horizontal"
+      this.layout.options.direction === "horizontal"
         ? resizerRect.width
         : resizerRect.height;
 
@@ -165,14 +165,14 @@ export class ElasticSplit {
     if (applyFirstPaneSize) {
       this.panes[0].applySizePercentage(
         firstPaneSizePercentage,
-        this.layout.direction
+        this.layout.options.direction
       );
     }
 
     if (applySecondPaneSize) {
       this.panes[1].applySizePercentage(
         secondPaneSizePercentage,
-        this.layout.direction
+        this.layout.options.direction
       );
     }
 

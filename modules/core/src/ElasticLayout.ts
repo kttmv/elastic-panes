@@ -13,9 +13,7 @@ export class ElasticLayout {
 
   private readonly parentElement: HTMLElement;
 
-  public readonly direction: Direction;
-  private parentElement: HTMLElement;
-  private direction: "vertical" | "horizontal";
+  public readonly options: Required<ElasticLayoutOptions>;
 
   constructor(
     panes: ElasticPane[],
@@ -42,7 +40,10 @@ export class ElasticLayout {
       }
     }
 
-    this.direction = direction;
+    this.options = {
+      direction,
+      snapDistance,
+    };
 
     const splits: ElasticSplit[] = [];
     for (let i = 0; i < panes.length; i++) {
@@ -62,7 +63,8 @@ export class ElasticLayout {
 
     for (const pane of this.panes) {
       const rect = pane.element.getBoundingClientRect();
-      totalSize += this.direction === "horizontal" ? rect.width : rect.height;
+      totalSize +=
+        this.options.direction === "horizontal" ? rect.width : rect.height;
     }
 
     return totalSize;
@@ -86,7 +88,9 @@ export class ElasticLayout {
 
     const parentRect = this.parentElement.getBoundingClientRect();
     const availableSize =
-      this.direction === "horizontal" ? parentRect.width : parentRect.height;
+      this.options.direction === "horizontal"
+        ? parentRect.width
+        : parentRect.height;
     const availableSizePercentage =
       ((availableSize - totalSizePixels) / availableSize) * 100;
 
@@ -106,9 +110,15 @@ export class ElasticLayout {
 
     for (const pane of this.panes) {
       if (pane.options.initialSizePixels !== undefined) {
-        pane.applySizePixels(pane.options.initialSizePixels, this.direction);
+        pane.applySizePixels(
+          pane.options.initialSizePixels,
+          this.options.direction
+        );
       } else {
-        pane.applySizePercentage(pane.options.initialSize, this.direction);
+        pane.applySizePercentage(
+          pane.options.initialSize,
+          this.options.direction
+        );
       }
     }
   }
