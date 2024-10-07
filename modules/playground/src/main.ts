@@ -30,11 +30,11 @@ const horizontalPane1 = new ElasticPane(horizontal1, {
   },
   minSize: {
     value: 10,
-    unit: "px",
+    unit: "%",
   },
   maxSize: {
     value: 50,
-    unit: "px",
+    unit: "%",
   },
 });
 const horizontalPane2 = new ElasticPane(horizontal2, {
@@ -43,8 +43,12 @@ const horizontalPane2 = new ElasticPane(horizontal2, {
     unit: "%",
   },
   minSize: {
-    value: 30,
-    unit: "px",
+    value: 10,
+    unit: "%",
+  },
+  maxSize: {
+    value: 50,
+    unit: "%",
   },
 });
 const horizontalPane3 = new ElasticPane(horizontal3, {
@@ -53,16 +57,24 @@ const horizontalPane3 = new ElasticPane(horizontal3, {
     unit: "%",
   },
   minSize: {
-    value: 30,
+    value: 10,
     unit: "%",
   },
   maxSize: {
-    value: 40,
+    value: 50,
     unit: "%",
   },
 });
 const horizontalPane4 = new ElasticPane(horizontal4, {
   initialSize: 1,
+  minSize: {
+    value: 10,
+    unit: "%",
+  },
+  maxSize: {
+    value: 50,
+    unit: "%",
+  },
 });
 
 const horizontalLayout = new ElasticLayout(

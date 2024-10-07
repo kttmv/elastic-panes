@@ -213,7 +213,9 @@ export class ElasticSplit {
       secondPaneSizePixelsClamped = secondPaneMaxSizePixels;
       firstPaneSizePixelsClamped =
         splitSizePixels - secondPaneSizePixelsClamped;
-    } else if (firstPaneSizeToApplyPixels < firstPaneMinSizePixels) {
+    }
+
+    if (firstPaneSizePixelsClamped < firstPaneMinSizePixels) {
       firstPaneSizePixelsClamped = firstPaneMinSizePixels;
       secondPaneSizePixelsClamped =
         splitSizePixels - firstPaneSizePixelsClamped;
@@ -233,7 +235,7 @@ export class ElasticSplit {
           previousSplitComputedPaneSizeDifferences[1];
       }
     } else if (
-      firstPaneSizeToApplyPixels >
+      firstPaneSizePixelsClamped >
       splitSizePixels - secondPaneMinSizePixels
     ) {
       firstPaneSizePixelsClamped = splitSizePixels - secondPaneMinSizePixels;
