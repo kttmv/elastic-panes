@@ -6,6 +6,7 @@ type SizeOption = {
 export type ElasticPaneOptions = {
   initialSize: number | SizeOption;
   minSize?: SizeOption;
+  maxSize?: SizeOption;
 };
 
 function checkSizeOption(size?: SizeOption): void {
@@ -18,7 +19,7 @@ function checkSizeOption(size?: SizeOption): void {
   }
 
   if (size.value < 0) {
-    throw new Error("Size value must be greater or equal to zero");
+    throw new Error("Size value must be greater than or equal to zero");
   }
 }
 
@@ -27,16 +28,18 @@ export class ElasticPane {
 
   constructor(
     public readonly element: HTMLElement,
-    { initialSize, minSize = undefined }: ElasticPaneOptions
+    { initialSize, minSize, maxSize }: ElasticPaneOptions
   ) {
     if (typeof initialSize !== "number") {
       checkSizeOption(initialSize);
     }
     checkSizeOption(minSize);
+    checkSizeOption(maxSize);
 
     this.options = {
       initialSize,
       minSize,
+      maxSize,
     };
   }
 

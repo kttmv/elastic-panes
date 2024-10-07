@@ -25,10 +25,7 @@ export class ElasticSplit {
   private createResizerElement(): HTMLElement {
     const resizerElement = document.createElement("div");
 
-    console.log(this.layout.options.direction);
-
     if (this.layout.options.direction === "horizontal") {
-      console.log("asdf");
       resizerElement.className = "elastic-resizer-horizontal";
     } else {
       resizerElement.className = "elastic-resizer-vertical";
@@ -188,6 +185,14 @@ export class ElasticSplit {
 
     const [firstPaneMinSizePixels, secondPaneMinSizePixels] =
       this.getMinSizes();
+    let [firstPaneMaxSizePixels, secondPaneMaxSizePixels] = this.getMaxSizes();
+
+    if (firstPaneMinSizePixels > firstPaneMaxSizePixels) {
+      firstPaneMaxSizePixels = firstPaneMinSizePixels;
+    }
+    if (secondPaneMinSizePixels > secondPaneMaxSizePixels) {
+      secondPaneMaxSizePixels = secondPaneMinSizePixels;
+    }
 
     let firstPaneSizePixelsClamped = firstPaneSizeToApplyPixels;
     let secondPaneSizePixelsClamped = secondPaneSizeToApplyPixels;
@@ -195,9 +200,20 @@ export class ElasticSplit {
     const splitIndex = this.layout.splits.indexOf(this);
 
     if (
-      firstPaneMinSizePixels !== undefined &&
-      firstPaneSizeToApplyPixels < firstPaneMinSizePixels
+      isFinite(firstPaneMaxSizePixels) &&
+      firstPaneSizeToApplyPixels > firstPaneMaxSizePixels
     ) {
+      firstPaneSizePixelsClamped = firstPaneMaxSizePixels;
+      secondPaneSizePixelsClamped =
+        splitSizePixels - firstPaneSizePixelsClamped;
+    } else if (
+      isFinite(secondPaneMaxSizePixels) &&
+      secondPaneSizeToApplyPixels > secondPaneMaxSizePixels
+    ) {
+      secondPaneSizePixelsClamped = secondPaneMaxSizePixels;
+      firstPaneSizePixelsClamped =
+        splitSizePixels - secondPaneSizePixelsClamped;
+    } else if (firstPaneSizeToApplyPixels < firstPaneMinSizePixels) {
       firstPaneSizePixelsClamped = firstPaneMinSizePixels;
       secondPaneSizePixelsClamped =
         splitSizePixels - firstPaneSizePixelsClamped;
@@ -217,8 +233,8 @@ export class ElasticSplit {
           previousSplitComputedPaneSizeDifferences[1];
       }
     } else if (
-      secondPaneMinSizePixels !== undefined &&
-      firstPaneSizeToApplyPixels > splitSizePixels - secondPaneMinSizePixels
+      firstPaneSizeToApplyPixels >
+      splitSizePixels - secondPaneMinSizePixels
     ) {
       firstPaneSizePixelsClamped = splitSizePixels - secondPaneMinSizePixels;
       secondPaneSizePixelsClamped =
@@ -251,18 +267,41 @@ export class ElasticSplit {
     const firstPaneMinSize = this.panes[0].options.minSize;
     const secondPaneMinSize = this.panes[1].options.minSize;
 
+    let result: [number, number] = [
+      firstPaneMinSize?.value ?? 0,
+      secondPaneMinSize?.value ?? 0,
+    ];
+
     if (firstPaneMinSize?.unit === "%") {
-      firstPaneMinSize.unit = "px";
-      firstPaneMinSize.value =
-        (layoutSizePixels * firstPaneMinSize.value) / 100;
+      result[0] = (layoutSizePixels * firstPaneMinSize.value) / 100;
     }
 
     if (secondPaneMinSize?.unit === "%") {
-      secondPaneMinSize.unit = "px";
-      secondPaneMinSize.value =
-        (layoutSizePixels * secondPaneMinSize.value) / 100;
+      result[1] = (layoutSizePixels * secondPaneMinSize.value) / 100;
     }
 
-    return [firstPaneMinSize?.value ?? 0, secondPaneMinSize?.value ?? 0];
+    return result;
+  }
+
+  private getMaxSizes(): [number, number] {
+    const layoutSizePixels = this.layout.getSize();
+
+    const firstPaneMaxSize = this.panes[0].options.maxSize;
+    const secondPaneMaxSize = this.panes[1].options.maxSize;
+
+    let result: [number, number] = [
+      firstPaneMaxSize?.value ?? Infinity,
+      secondPaneMaxSize?.value ?? Infinity,
+    ];
+
+    if (firstPaneMaxSize?.unit === "%") {
+      result[0] = (layoutSizePixels * firstPaneMaxSize.value) / 100;
+    }
+
+    if (secondPaneMaxSize?.unit === "%") {
+      result[1] = (layoutSizePixels * secondPaneMaxSize.value) / 100;
+    }
+
+    return result;
   }
 }
