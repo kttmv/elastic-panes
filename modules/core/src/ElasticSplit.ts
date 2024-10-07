@@ -1,3 +1,4 @@
+import { c } from "../../../node_modules/vite/dist/node/types.d-aGj9QkWt";
 import { ElasticLayout } from "./ElasticLayout";
 import { ElasticPane } from "./ElasticPane";
 
@@ -137,12 +138,7 @@ export class ElasticSplit {
     let secondPaneSizePixels = splitSizePixels - firstPaneSizePixels;
 
     const [firstPaneSizePixelsClamped, secondPaneSizePixelsClamped] =
-      this.clampToMinSizes(
-        firstPaneSizePixels,
-        secondPaneSizePixels,
-        layoutSizePixels,
-        splitSizePixels
-      );
+      this.clampAndCascade(firstPaneSizePixels, secondPaneSizePixels);
 
     const newSplitSizePixels =
       firstPaneSizePixelsClamped + secondPaneSizePixelsClamped;
@@ -163,15 +159,17 @@ export class ElasticSplit {
         : 0;
 
     if (applyFirstPaneSize) {
-      this.panes[0].applySizePercentage(
+      this.panes[0].applySize(
         firstPaneSizePercentage,
+        "%",
         this.layout.options.direction
       );
     }
 
     if (applySecondPaneSize) {
-      this.panes[1].applySizePercentage(
+      this.panes[1].applySize(
         secondPaneSizePercentage,
+        "%",
         this.layout.options.direction
       );
     }
@@ -182,27 +180,14 @@ export class ElasticSplit {
     ];
   }
 
-  private clampToMinSizes(
+  private clampAndCascade(
     firstPaneSizeToApplyPixels: number,
-    secondPaneSizeToApplyPixels: number,
-    layoutSizePixels: number,
-    splitSizePixels: number
+    secondPaneSizeToApplyPixels: number
   ): [number, number] {
-    const firstPaneMinSizePercents = this.panes[0].options.minSize;
-    const secondPaneMinSizePercents = this.panes[1].options.minSize;
+    const splitSizePixels = this.getSize();
 
-    let firstPaneMinSizePixels = this.panes[0].options.minSizePixels ?? 0;
-    let secondPaneMinSizePixels = this.panes[1].options.minSizePixels ?? 0;
-
-    if (firstPaneMinSizePercents !== undefined) {
-      firstPaneMinSizePixels =
-        (layoutSizePixels * firstPaneMinSizePercents) / 100;
-    }
-
-    if (secondPaneMinSizePercents !== undefined) {
-      secondPaneMinSizePixels =
-        (layoutSizePixels * secondPaneMinSizePercents) / 100;
-    }
+    const [firstPaneMinSizePixels, secondPaneMinSizePixels] =
+      this.getMinSizes();
 
     let firstPaneSizePixelsClamped = firstPaneSizeToApplyPixels;
     let secondPaneSizePixelsClamped = secondPaneSizeToApplyPixels;
@@ -258,5 +243,26 @@ export class ElasticSplit {
     }
 
     return [firstPaneSizePixelsClamped, secondPaneSizePixelsClamped];
+  }
+
+  private getMinSizes(): [number, number] {
+    const layoutSizePixels = this.layout.getSize();
+
+    const firstPaneMinSize = this.panes[0].options.minSize;
+    const secondPaneMinSize = this.panes[1].options.minSize;
+
+    if (firstPaneMinSize?.unit === "%") {
+      firstPaneMinSize.unit = "px";
+      firstPaneMinSize.value =
+        (layoutSizePixels * firstPaneMinSize.value) / 100;
+    }
+
+    if (secondPaneMinSize?.unit === "%") {
+      secondPaneMinSize.unit = "px";
+      secondPaneMinSize.value =
+        (layoutSizePixels * secondPaneMinSize.value) / 100;
+    }
+
+    return [firstPaneMinSize?.value ?? 0, secondPaneMinSize?.value ?? 0];
   }
 }

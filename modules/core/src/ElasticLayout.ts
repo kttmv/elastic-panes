@@ -75,14 +75,19 @@ export class ElasticLayout {
       split.apply();
     }
 
+    let totalSizeRelative = 0;
     let totalSizePercentage = 0;
     let totalSizePixels = 0;
 
     for (const pane of this.panes) {
-      if (pane.options.initialSize !== undefined) {
-        totalSizePercentage += pane.options.initialSize;
+      const initialSize = pane.options.initialSize;
+
+      if (typeof initialSize === "number") {
+        totalSizeRelative += initialSize;
+      } else if (initialSize.unit === "%") {
+        totalSizePercentage += initialSize.value;
       } else {
-        totalSizePixels += pane.options.initialSizePixels;
+        totalSizePixels += initialSize.value;
       }
     }
 
@@ -91,34 +96,42 @@ export class ElasticLayout {
       this.options.direction === "horizontal"
         ? parentRect.width
         : parentRect.height;
-    const availableSizePercentage =
+    let availableSizePercentage =
       ((availableSize - totalSizePixels) / availableSize) * 100;
 
-    if (totalSizePercentage === 0) {
-      throw new Error(
-        "At least one pane should have initial size of greater than zero percents"
-      );
-    } else if (totalSizePercentage !== availableSizePercentage) {
+    if (
+      (totalSizeRelative === 0 &&
+        totalSizePercentage < availableSizePercentage) ||
+      totalSizePercentage > availableSizePercentage
+    ) {
       const scaleFactor = availableSizePercentage / totalSizePercentage;
 
       for (const pane of this.panes) {
-        if (pane.options.initialSize !== undefined) {
-          pane.options.initialSize *= scaleFactor;
+        const initialSize = pane.options.initialSize;
+
+        if (typeof initialSize !== "number" && initialSize.unit === "%") {
+          initialSize.value *= scaleFactor;
         }
       }
+
+      availableSizePercentage = 0;
+    } else {
+      availableSizePercentage -= totalSizePercentage;
     }
 
     for (const pane of this.panes) {
-      if (pane.options.initialSizePixels !== undefined) {
-        pane.applySizePixels(
-          pane.options.initialSizePixels,
+      const initialSize = pane.options.initialSize;
+
+      if (typeof initialSize === "number") {
+        pane.applySize(
+          (initialSize / totalSizeRelative) * availableSizePercentage,
+          "%",
           this.options.direction
         );
+      } else if (initialSize.unit === "%") {
+        pane.applySize(initialSize.value, "%", this.options.direction);
       } else {
-        pane.applySizePercentage(
-          pane.options.initialSize,
-          this.options.direction
-        );
+        pane.applySize(initialSize.value, "px", this.options.direction);
       }
     }
   }

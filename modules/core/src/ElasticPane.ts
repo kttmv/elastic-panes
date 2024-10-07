@@ -1,55 +1,56 @@
-type InitialSizeOptions =
-  | { initialSizePixels: number; initialSize?: never }
-  | { initialSizePixels?: never; initialSize: number };
+type SizeOption = {
+  value: number;
+  unit: "px" | "%";
+};
 
-type MinSizeOptions =
-  | { minSizePixels?: never; minSize?: never }
-  | { minSizePixels: number; minSize?: never }
-  | { minSizePixels?: never; minSize: number };
+export type ElasticPaneOptions = {
+  initialSize: number | SizeOption;
+  minSize?: SizeOption;
+};
 
-export type ElasticPaneOptions = InitialSizeOptions & MinSizeOptions & {};
+function checkSizeOption(size?: SizeOption): void {
+  if (size === undefined) {
+    return;
+  }
+
+  if (!["px", "%"].includes(size.unit)) {
+    throw new Error(`Unsupported unit type '${size.unit}'`);
+  }
+
+  if (size.value < 0) {
+    throw new Error("Size value must be greater or equal to zero");
+  }
+}
 
 export class ElasticPane {
+  public readonly options: ElasticPaneOptions;
+
   constructor(
     public readonly element: HTMLElement,
-    public readonly options: ElasticPaneOptions
+    { initialSize, minSize = undefined }: ElasticPaneOptions
   ) {
-    if (
-      options.initialSizePixels !== undefined &&
-      options.initialSize !== undefined
-    ) {
-      throw new Error(
-        "Initial size must be set either as pixels or as percents, not both"
-      );
+    if (typeof initialSize !== "number") {
+      checkSizeOption(initialSize);
     }
+    checkSizeOption(minSize);
 
-    if (options.minSize !== undefined && options.minSizePixels !== undefined) {
-      throw new Error(
-        "Minimal size must be set either as pixels or as percents, not both"
-      );
-    }
+    this.options = {
+      initialSize,
+      minSize,
+    };
   }
 
-  public applySizePercentage(
-    percentage: number,
+  public applySize(
+    value: number,
+    units: "px" | "%",
     direction: "vertical" | "horizontal"
   ) {
-    const value = `${percentage}%`;
+    const sizeValue = `${value}${units}`;
 
     if (direction === "horizontal") {
-      this.element.style.width = value;
+      this.element.style.width = sizeValue;
     } else {
-      this.element.style.height = value;
-    }
-  }
-
-  public applySizePixels(pixels: number, direction: "vertical" | "horizontal") {
-    const value = `${pixels}px`;
-
-    if (direction === "horizontal") {
-      this.element.style.width = value;
-    } else {
-      this.element.style.height = value;
+      this.element.style.height = sizeValue;
     }
   }
 }
