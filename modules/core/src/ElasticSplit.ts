@@ -1,11 +1,10 @@
-import { c } from "../../../node_modules/vite/dist/node/types.d-aGj9QkWt";
 import { ElasticLayout } from "./ElasticLayout";
 import { ElasticPane } from "./ElasticPane";
 
 export class ElasticSplit {
   public readonly panes: readonly [ElasticPane, ElasticPane];
 
-  private readonly resizerElement: HTMLElement;
+  public readonly resizerElement: HTMLElement;
 
   constructor(
     private readonly layout: ElasticLayout,
@@ -35,34 +34,31 @@ export class ElasticSplit {
   }
 
   private getSize(): number {
-    const firstRect = this.panes[0].element.getBoundingClientRect();
-    const secondRect = this.panes[1].element.getBoundingClientRect();
+    const sizes = this.getPaneSizes();
 
-    if (this.layout.options.direction === "horizontal") {
-      return firstRect.width + secondRect.width;
-    } else {
-      return firstRect.height + secondRect.height;
-    }
+    return sizes[0] + sizes[1];
   }
 
   private getPaneSizes(): [number, number] {
     const firstRect = this.panes[0].element.getBoundingClientRect();
     const secondRect = this.panes[1].element.getBoundingClientRect();
 
+    let sizes: [number, number] | undefined;
+
     if (this.layout.options.direction === "horizontal") {
-      return [firstRect.width, secondRect.width];
+      sizes = [firstRect.width, secondRect.width];
     } else {
-      return [firstRect.height, secondRect.height];
+      sizes = [firstRect.height, secondRect.height];
     }
+
+    sizes[0] = parseFloat(sizes[0].toFixed(1));
+    sizes[1] = parseFloat(sizes[1].toFixed(1));
+
+    return sizes;
   }
 
   private getPositionWithinSplit(position: number) {
     const rect = this.panes[0].element.getBoundingClientRect();
-    const resizerRect = this.resizerElement.getBoundingClientRect();
-    const resizerSize =
-      this.layout.options.direction === "horizontal"
-        ? resizerRect.width
-        : resizerRect.height;
 
     const relativePosition =
       position -
@@ -120,40 +116,28 @@ export class ElasticSplit {
     applyFirstPaneSize: boolean,
     applySecondPaneSize: boolean
   ): [number, number] {
-    const layoutSizePixels = this.layout.getSize();
-    const splitSizePixels = this.getSize();
-
     const paneSizesBeforeUpdate = this.getPaneSizes();
 
     const resizerRect = this.resizerElement.getBoundingClientRect();
-    const resizerSizePixels =
+    let resizerSizePixels =
       this.layout.options.direction === "horizontal"
         ? resizerRect.width
         : resizerRect.height;
+    resizerSizePixels = parseFloat(resizerSizePixels.toFixed(1));
 
     let firstPaneSizePixels = newResizerPosition - resizerSizePixels / 2;
-    let secondPaneSizePixels = splitSizePixels - firstPaneSizePixels;
+    let secondPaneSizePixels = this.getSize() - firstPaneSizePixels;
 
     const [firstPaneSizePixelsClamped, secondPaneSizePixelsClamped] =
       this.clampAndCascade(firstPaneSizePixels, secondPaneSizePixels);
 
-    const newSplitSizePixels =
-      firstPaneSizePixelsClamped + secondPaneSizePixelsClamped;
-
-    const newSplitSizePercentage =
-      (newSplitSizePixels / layoutSizePixels) * 100;
+    const layoutSizePixels = this.layout.getSize();
 
     const firstPaneSizePercentage =
-      newSplitSizePixels !== 0
-        ? (firstPaneSizePixelsClamped / newSplitSizePixels) *
-          newSplitSizePercentage
-        : 0;
+      (firstPaneSizePixelsClamped / layoutSizePixels) * 100;
 
     const secondPaneSizePercentage =
-      newSplitSizePixels !== 0
-        ? (secondPaneSizePixelsClamped / newSplitSizePixels) *
-          newSplitSizePercentage
-        : 0;
+      (secondPaneSizePixelsClamped / layoutSizePixels) * 100;
 
     if (applyFirstPaneSize) {
       this.panes[0].applySize(

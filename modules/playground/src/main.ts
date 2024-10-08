@@ -1,7 +1,7 @@
 import "./style.css";
 import { ElasticLayout, ElasticPane } from "@elastic-panes/core";
 
-const container1 = document.getElementById("test-container-horizontal")!;
+const container1 = document.getElementById("wrapper")!;
 const container2 = document.getElementById("test-container-vertical")!;
 
 const containerPane1 = new ElasticPane(container1, {
@@ -25,7 +25,7 @@ const horizontal4 = document.getElementById("horizontal_4")!;
 
 const horizontalPane1 = new ElasticPane(horizontal1, {
   initialSize: {
-    value: 10,
+    value: 25,
     unit: "%",
   },
   minSize: {
@@ -39,7 +39,7 @@ const horizontalPane1 = new ElasticPane(horizontal1, {
 });
 const horizontalPane2 = new ElasticPane(horizontal2, {
   initialSize: {
-    value: 10,
+    value: 25,
     unit: "%",
   },
   minSize: {
@@ -53,7 +53,7 @@ const horizontalPane2 = new ElasticPane(horizontal2, {
 });
 const horizontalPane3 = new ElasticPane(horizontal3, {
   initialSize: {
-    value: 35,
+    value: 25,
     unit: "%",
   },
   minSize: {
@@ -66,7 +66,10 @@ const horizontalPane3 = new ElasticPane(horizontal3, {
   },
 });
 const horizontalPane4 = new ElasticPane(horizontal4, {
-  initialSize: 1,
+  initialSize: {
+    value: 25,
+    unit: "%",
+  },
   minSize: {
     value: 10,
     unit: "%",

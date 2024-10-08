@@ -59,15 +59,15 @@ export class ElasticLayout {
   }
 
   public getSize() {
-    let totalSize = 0;
+    let totalSize = this.parentElement.getBoundingClientRect().width;
 
-    for (const pane of this.panes) {
-      const rect = pane.element.getBoundingClientRect();
-      totalSize +=
+    for (const split of this.splits) {
+      const rect = split.resizerElement.getBoundingClientRect();
+      totalSize -=
         this.options.direction === "horizontal" ? rect.width : rect.height;
     }
 
-    return totalSize;
+    return parseFloat(totalSize.toFixed(1));
   }
 
   public apply() {

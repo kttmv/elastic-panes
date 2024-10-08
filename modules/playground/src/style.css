@@ -1,3 +1,4 @@
+
 .elastic-resizer-horizontal {
   cursor: col-resize;
   background-color: blue;
@@ -12,6 +13,11 @@
   min-height: 4px;
 }
 
+#wrapper {
+  max-width: 100%;
+  overflow: auto;
+}
+
 #test-container {
   height: 90vh;
   display: flex;
@@ -20,7 +26,8 @@
 
 #test-container-horizontal {
   display: flex;
-  height: 33vh;
+  height: 100%;
+  width: 150vw;
 }
 
 #test-container-vertical {
