@@ -64,7 +64,7 @@ export class ElasticSplit {
       position -
       (this.layout.options.direction === "horizontal" ? rect.left : rect.top);
 
-    return relativePosition;
+    return parseFloat(relativePosition.toFixed(1));
   }
 
   public getResizerCenterPosition(): number {
@@ -75,7 +75,17 @@ export class ElasticSplit {
         : resizerRect.top + resizerRect.height / 2
     );
 
-    return center;
+    return parseFloat(center.toFixed(1));
+  }
+
+  private getResizerSize(): number {
+    const resizerRect = this.resizerElement.getBoundingClientRect();
+    const size =
+      this.layout.options.direction === "horizontal"
+        ? resizerRect.width
+        : resizerRect.height;
+
+    return parseFloat(size.toFixed(1));
   }
 
   private addDragHandler(): void {
@@ -98,9 +108,11 @@ export class ElasticSplit {
         this.layout.options.direction === "horizontal" ? e.clientX : e.clientY
       );
 
-      const position = resizerStartPosition + mousePosition - dragStartPosition;
+      let newResizerPosition =
+        resizerStartPosition + mousePosition - dragStartPosition;
+      newResizerPosition = parseFloat(newResizerPosition.toFixed(1));
 
-      this.updatePaneSizes(position, true, true);
+      this.updatePaneSizes(newResizerPosition, true, true);
 
       const totalPercentage = this.layout.panes
         .map((pane) =>
@@ -112,7 +124,7 @@ export class ElasticSplit {
         .map((width) => width.replace("%", ""))
         .reduce((total, width) => total + parseFloat(width), 0);
 
-      if (totalPercentage !== 100) {
+      if (Math.abs(totalPercentage - 100) > 0.0001) {
         console.error(totalPercentage);
       }
     };
@@ -132,26 +144,25 @@ export class ElasticSplit {
   ): [number, number] {
     const paneSizesBeforeUpdate = this.getPaneSizes();
 
-    const resizerRect = this.resizerElement.getBoundingClientRect();
-    let resizerSizePixels =
-      this.layout.options.direction === "horizontal"
-        ? resizerRect.width
-        : resizerRect.height;
-    resizerSizePixels = parseFloat(resizerSizePixels.toFixed(1));
+    const splitSizePixels = this.getSize();
+
+    const resizerSizePixels = this.getResizerSize();
 
     let firstPaneSizePixels = newResizerPosition - resizerSizePixels / 2;
-    let secondPaneSizePixels = this.getSize() - firstPaneSizePixels;
+    let secondPaneSizePixels = splitSizePixels - firstPaneSizePixels;
 
     const [firstPaneSizePixelsClamped, secondPaneSizePixelsClamped] =
       this.clampAndCascade(firstPaneSizePixels, secondPaneSizePixels);
 
     const layoutSizePixels = this.layout.getSize();
 
-    const firstPaneSizePercentage =
+    let firstPaneSizePercentage =
       (firstPaneSizePixelsClamped / layoutSizePixels) * 100;
+    firstPaneSizePercentage = parseFloat(firstPaneSizePercentage.toFixed(1));
 
-    const secondPaneSizePercentage =
+    let secondPaneSizePercentage =
       (secondPaneSizePixelsClamped / layoutSizePixels) * 100;
+    secondPaneSizePercentage = parseFloat(secondPaneSizePercentage.toFixed(1));
 
     if (applyFirstPaneSize) {
       this.panes[0].applySize(
