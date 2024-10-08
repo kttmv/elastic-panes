@@ -104,6 +104,11 @@ export class ElasticSplit {
     };
 
     const dragMove = (e: MouseEvent): void => {
+      console.log(this.layout.getSize());
+      if (this.layout.getSize() <= 0) {
+        return;
+      }
+
       const mousePosition = this.getPositionWithinSplit(
         this.layout.options.direction === "horizontal" ? e.clientX : e.clientY
       );

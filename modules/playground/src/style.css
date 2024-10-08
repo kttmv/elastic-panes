@@ -33,7 +33,8 @@
 #test-container-vertical {
   display: flex;
   flex-direction: column;
-  height: 65vh
+  height: 65vh;
+  overflow: hidden;
 }
 
 #horizontal_1,
