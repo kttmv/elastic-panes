@@ -101,6 +101,13 @@ export class ElasticSplit {
       const position = resizerStartPosition + mousePosition - dragStartPosition;
 
       this.updatePaneSizes(position, true, true);
+
+      const width = this.layout.panes
+        .map((pane) => pane.element.style.width)
+        .filter((width) => width.includes("%"))
+        .map((width) => width.replace("%", ""))
+        .reduce((total, width) => total + parseFloat(width), 0);
+      console.log(width);
     };
 
     const dragEnd = (): void => {
