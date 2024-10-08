@@ -59,7 +59,10 @@ export class ElasticLayout {
   }
 
   public getSize() {
-    let totalSize = this.parentElement.getBoundingClientRect().width;
+    const rect = this.parentElement.getBoundingClientRect();
+
+    let totalSize =
+      this.options.direction === "horizontal" ? rect.width : rect.height;
 
     for (const split of this.splits) {
       const rect = split.resizerElement.getBoundingClientRect();
