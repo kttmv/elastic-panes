@@ -102,12 +102,19 @@ export class ElasticSplit {
 
       this.updatePaneSizes(position, true, true);
 
-      const width = this.layout.panes
-        .map((pane) => pane.element.style.width)
+      const totalPercentage = this.layout.panes
+        .map((pane) =>
+          this.layout.options.direction === "horizontal"
+            ? pane.element.style.width
+            : pane.element.style.height
+        )
         .filter((width) => width.includes("%"))
         .map((width) => width.replace("%", ""))
         .reduce((total, width) => total + parseFloat(width), 0);
-      console.log(width);
+
+      if (totalPercentage !== 100) {
+        console.error(totalPercentage);
+      }
     };
 
     const dragEnd = (): void => {
