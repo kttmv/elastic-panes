@@ -33,7 +33,7 @@ export class ElasticSplit {
     return resizerElement;
   }
 
-  private getSize(): number {
+  private getTotalPanesSize(): number {
     const sizes = this.getPaneSizes();
 
     return sizes[0] + sizes[1];
@@ -104,8 +104,7 @@ export class ElasticSplit {
     };
 
     const dragMove = (e: MouseEvent): void => {
-      console.log(this.layout.getSize());
-      if (this.layout.getSize() <= 0) {
+      if (this.layout.getTotalPanesSize() === 0) {
         return;
       }
 
@@ -147,175 +146,154 @@ export class ElasticSplit {
     applyFirstPaneSize: boolean,
     applySecondPaneSize: boolean
   ): [number, number] {
-    const paneSizesBeforeUpdate = this.getPaneSizes();
+    const layoutPanesTotalSizePixels = this.layout.getTotalPanesSize();
+    const splitTotalSize = this.getTotalPanesSize();
+    const resizerSize = this.getResizerSize();
 
-    const splitSizePixels = this.getSize();
-
-    const resizerSizePixels = this.getResizerSize();
-
-    let firstPaneSizePixels = newResizerPosition - resizerSizePixels / 2;
-    let secondPaneSizePixels = splitSizePixels - firstPaneSizePixels;
-
-    const [firstPaneSizePixelsClamped, secondPaneSizePixelsClamped] =
-      this.clampAndCascade(firstPaneSizePixels, secondPaneSizePixels);
-
-    const layoutSizePixels = this.layout.getSize();
-
-    let firstPaneSizePercentage =
-      (firstPaneSizePixelsClamped / layoutSizePixels) * 100;
-    firstPaneSizePercentage = parseFloat(firstPaneSizePercentage.toFixed(1));
-
-    let secondPaneSizePercentage =
-      (secondPaneSizePixelsClamped / layoutSizePixels) * 100;
-    secondPaneSizePercentage = parseFloat(secondPaneSizePercentage.toFixed(1));
-
-    if (applyFirstPaneSize) {
-      this.panes[0].applySize(
-        firstPaneSizePercentage,
-        "%",
-        this.layout.options.direction
-      );
-    }
-
-    if (applySecondPaneSize) {
-      this.panes[1].applySize(
-        secondPaneSizePercentage,
-        "%",
-        this.layout.options.direction
-      );
-    }
-
-    return [
-      firstPaneSizePixelsClamped - paneSizesBeforeUpdate[0],
-      secondPaneSizePixelsClamped - paneSizesBeforeUpdate[1],
+    let sizes: [number, number] = [
+      newResizerPosition - resizerSize / 2,
+      splitTotalSize - newResizerPosition + resizerSize / 2,
     ];
+
+    sizes = this.clampToMaxSizes(sizes);
+    sizes = this.clampToMinSizesAndCascadeResize(sizes);
+
+    const percentageSizes = [
+      (sizes[0] / layoutPanesTotalSizePixels) * 100,
+      (sizes[1] / layoutPanesTotalSizePixels) * 100,
+    ];
+
+    percentageSizes[0] = parseFloat(percentageSizes[0].toFixed(1));
+    percentageSizes[1] = parseFloat(percentageSizes[1].toFixed(1));
+
+    const previousSizes = this.getPaneSizes();
+
+    const direction = this.layout.options.direction;
+
+    if (applyFirstPaneSize)
+      this.panes[0].applySize(percentageSizes[0], "%", direction);
+    if (applySecondPaneSize)
+      this.panes[1].applySize(percentageSizes[1], "%", direction);
+
+    return [sizes[0] - previousSizes[0], sizes[1] - previousSizes[1]];
   }
 
-  private clampAndCascade(
-    firstPaneSizeToApplyPixels: number,
-    secondPaneSizeToApplyPixels: number
+  private clampToMaxSizes(sizes: [number, number]): [number, number] {
+    const splitSizePixels = this.getTotalPanesSize();
+
+    const minSizes = this.getMinSizes();
+    let maxSizes = this.getMaxSizes();
+
+    if (minSizes[0] > maxSizes[0]) {
+      maxSizes[0] = minSizes[0];
+    }
+    if (minSizes[1] > maxSizes[1]) {
+      maxSizes[1] = minSizes[1];
+    }
+
+    const clampedSizes: [number, number] = [...sizes];
+
+    if (isFinite(maxSizes[0]) && sizes[0] > maxSizes[0]) {
+      clampedSizes[0] = maxSizes[0];
+      clampedSizes[1] = splitSizePixels - clampedSizes[0];
+    } else if (isFinite(maxSizes[1]) && sizes[1] > maxSizes[1]) {
+      clampedSizes[1] = maxSizes[1];
+      clampedSizes[0] = splitSizePixels - clampedSizes[1];
+    }
+
+    return clampedSizes;
+  }
+
+  private clampToMinSizesAndCascadeResize(
+    sizes: [number, number]
   ): [number, number] {
-    const splitSizePixels = this.getSize();
-
-    const [firstPaneMinSizePixels, secondPaneMinSizePixels] =
-      this.getMinSizes();
-    let [firstPaneMaxSizePixels, secondPaneMaxSizePixels] = this.getMaxSizes();
-
-    if (firstPaneMinSizePixels > firstPaneMaxSizePixels) {
-      firstPaneMaxSizePixels = firstPaneMinSizePixels;
-    }
-    if (secondPaneMinSizePixels > secondPaneMaxSizePixels) {
-      secondPaneMaxSizePixels = secondPaneMinSizePixels;
-    }
-
-    let firstPaneSizePixelsClamped = firstPaneSizeToApplyPixels;
-    let secondPaneSizePixelsClamped = secondPaneSizeToApplyPixels;
-
     const splitIndex = this.layout.splits.indexOf(this);
+    const splitSize = this.getTotalPanesSize();
 
-    if (
-      isFinite(firstPaneMaxSizePixels) &&
-      firstPaneSizeToApplyPixels > firstPaneMaxSizePixels
-    ) {
-      firstPaneSizePixelsClamped = firstPaneMaxSizePixels;
-      secondPaneSizePixelsClamped =
-        splitSizePixels - firstPaneSizePixelsClamped;
-    } else if (
-      isFinite(secondPaneMaxSizePixels) &&
-      secondPaneSizeToApplyPixels > secondPaneMaxSizePixels
-    ) {
-      secondPaneSizePixelsClamped = secondPaneMaxSizePixels;
-      firstPaneSizePixelsClamped =
-        splitSizePixels - secondPaneSizePixelsClamped;
-    }
+    const minSizes = this.getMinSizes();
+    const clampedSizes: [number, number] = [...sizes];
 
-    if (firstPaneSizePixelsClamped < firstPaneMinSizePixels) {
-      firstPaneSizePixelsClamped = firstPaneMinSizePixels;
-      secondPaneSizePixelsClamped =
-        splitSizePixels - firstPaneSizePixelsClamped;
+    if (sizes[0] < minSizes[0]) {
+      clampedSizes[0] = minSizes[0];
+      clampedSizes[1] = splitSize - clampedSizes[0];
 
-      if (splitIndex > 0) {
+      if (splitIndex !== 0) {
         const previousSplit = this.layout.splits[splitIndex - 1];
 
         const position =
-          firstPaneSizeToApplyPixels -
-          firstPaneMinSizePixels +
-          previousSplit.getResizerCenterPosition();
+          previousSplit.getResizerCenterPosition() - clampedSizes[0] + sizes[0];
 
         const previousSplitComputedPaneSizeDifferences =
           previousSplit.updatePaneSizes(position, true, false);
 
-        secondPaneSizePixelsClamped +=
-          previousSplitComputedPaneSizeDifferences[1];
+        clampedSizes[1] += previousSplitComputedPaneSizeDifferences[1];
       }
-    } else if (
-      firstPaneSizePixelsClamped >
-      splitSizePixels - secondPaneMinSizePixels
-    ) {
-      firstPaneSizePixelsClamped = splitSizePixels - secondPaneMinSizePixels;
-      secondPaneSizePixelsClamped =
-        splitSizePixels - firstPaneSizePixelsClamped;
+    } else if (sizes[0] > splitSize - minSizes[1]) {
+      clampedSizes[0] = splitSize - minSizes[1];
+      clampedSizes[1] = minSizes[1];
 
-      if (splitIndex < this.layout.splits.length - 1) {
+      if (splitIndex !== this.layout.splits.length - 1) {
         const nextSplit = this.layout.splits[splitIndex + 1];
 
         const position =
-          firstPaneSizeToApplyPixels -
-          firstPaneSizePixelsClamped +
-          nextSplit.getResizerCenterPosition();
+          nextSplit.getResizerCenterPosition() + sizes[0] - clampedSizes[0];
 
-        const nextSplitComputedPaneSizeDifferences = nextSplit.updatePaneSizes(
+        const nextSplitDifference = nextSplit.updatePaneSizes(
           position,
           false,
           true
         );
 
-        firstPaneSizePixelsClamped += nextSplitComputedPaneSizeDifferences[0];
+        clampedSizes[0] += nextSplitDifference[0];
       }
     }
 
-    return [firstPaneSizePixelsClamped, secondPaneSizePixelsClamped];
+    return clampedSizes;
   }
 
   private getMinSizes(): [number, number] {
-    const layoutSizePixels = this.layout.getSize();
+    const layoutSizePixels = this.layout.getTotalPanesSize();
 
-    const firstPaneMinSize = this.panes[0].options.minSize;
-    const secondPaneMinSize = this.panes[1].options.minSize;
-
-    let result: [number, number] = [
-      firstPaneMinSize?.value ?? 0,
-      secondPaneMinSize?.value ?? 0,
+    const minSizes = [
+      this.panes[0].options.minSize,
+      this.panes[1].options.minSize,
     ];
 
-    if (firstPaneMinSize?.unit === "%") {
-      result[0] = (layoutSizePixels * firstPaneMinSize.value) / 100;
+    let result: [number, number] = [
+      minSizes[0]?.value ?? 0,
+      minSizes[1]?.value ?? 0,
+    ];
+
+    if (minSizes[0]?.unit === "%") {
+      result[0] = (layoutSizePixels * minSizes[0].value) / 100;
     }
 
-    if (secondPaneMinSize?.unit === "%") {
-      result[1] = (layoutSizePixels * secondPaneMinSize.value) / 100;
+    if (minSizes[1]?.unit === "%") {
+      result[1] = (layoutSizePixels * minSizes[1].value) / 100;
     }
 
     return result;
   }
 
   private getMaxSizes(): [number, number] {
-    const layoutSizePixels = this.layout.getSize();
+    const layoutSizePixels = this.layout.getTotalPanesSize();
 
-    const firstPaneMaxSize = this.panes[0].options.maxSize;
-    const secondPaneMaxSize = this.panes[1].options.maxSize;
-
-    let result: [number, number] = [
-      firstPaneMaxSize?.value ?? Infinity,
-      secondPaneMaxSize?.value ?? Infinity,
+    const maxSizes = [
+      this.panes[0].options.maxSize,
+      this.panes[1].options.maxSize,
     ];
 
-    if (firstPaneMaxSize?.unit === "%") {
-      result[0] = (layoutSizePixels * firstPaneMaxSize.value) / 100;
+    let result: [number, number] = [
+      maxSizes[0]?.value ?? Infinity,
+      maxSizes[1]?.value ?? Infinity,
+    ];
+
+    if (maxSizes[0]?.unit === "%") {
+      result[0] = (layoutSizePixels * maxSizes[0].value) / 100;
     }
 
-    if (secondPaneMaxSize?.unit === "%") {
-      result[1] = (layoutSizePixels * secondPaneMaxSize.value) / 100;
+    if (maxSizes[1]?.unit === "%") {
+      result[1] = (layoutSizePixels * maxSizes[1].value) / 100;
     }
 
     return result;

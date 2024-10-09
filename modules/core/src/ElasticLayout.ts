@@ -58,7 +58,7 @@ export class ElasticLayout {
     this.parentElement = parent;
   }
 
-  public getSize() {
+  public getTotalPanesSize() {
     const rect = this.parentElement.getBoundingClientRect();
 
     let totalSize =
@@ -66,11 +66,12 @@ export class ElasticLayout {
 
     for (const split of this.splits) {
       const rect = split.resizerElement.getBoundingClientRect();
-      totalSize -=
+      const resizerSize =
         this.options.direction === "horizontal" ? rect.width : rect.height;
+      totalSize -= parseFloat(resizerSize.toFixed(1));
     }
 
-    return parseFloat(totalSize.toFixed(1));
+    return totalSize <= 0 ? 0 : parseFloat(totalSize.toFixed(1));
   }
 
   public apply() {
