@@ -146,7 +146,7 @@ export class ElasticSplit {
     applyFirstPaneSize: boolean,
     applySecondPaneSize: boolean
   ): [number, number] {
-    const layoutPanesTotalSizePixels = this.layout.getPanesTotalSize();
+    const layoutPanesTotalSize = this.layout.getPanesTotalSize();
     const splitTotalSize = this.getPanesTotalSize();
     const resizerSize = this.getResizerSize();
 
@@ -155,62 +155,54 @@ export class ElasticSplit {
       splitTotalSize - newResizerPosition + resizerSize / 2,
     ];
 
-    let clampedSizes = this.clampToMaxSizes(sizes);
-    clampedSizes = this.clampToMinSizesAndCascadeResize(clampedSizes);
+    const clampedSizes = this.clampSizes(sizes);
+    const newSizes = this.cascadeResize(clampedSizes, sizes);
 
-    const percentageSizes = [
-      (clampedSizes[0] / layoutPanesTotalSizePixels) * 100,
-      (clampedSizes[1] / layoutPanesTotalSizePixels) * 100,
+    const percentages = [
+      (newSizes[0] / layoutPanesTotalSize) * 100,
+      (newSizes[1] / layoutPanesTotalSize) * 100,
     ];
 
-    percentageSizes[0] = parseFloat(percentageSizes[0].toFixed(1));
-    percentageSizes[1] = parseFloat(percentageSizes[1].toFixed(1));
+    percentages[0] = parseFloat(percentages[0].toFixed(1));
+    percentages[1] = parseFloat(percentages[1].toFixed(1));
 
     const previousSizes = this.getPaneSizes();
 
     const direction = this.layout.options.direction;
 
     if (applyFirstPaneSize)
-      this.panes[0].applySize(percentageSizes[0], "%", direction);
+      this.panes[0].applySize(percentages[0], "%", direction);
     if (applySecondPaneSize)
-      this.panes[1].applySize(percentageSizes[1], "%", direction);
+      this.panes[1].applySize(percentages[1], "%", direction);
 
-    return [
-      clampedSizes[0] - previousSizes[0],
-      clampedSizes[1] - previousSizes[1],
-    ];
+    return [newSizes[0] - previousSizes[0], newSizes[1] - previousSizes[1]];
+  }
+
+  private clampSizes(sizes: [number, number]): [number, number] {
+    let clampedSizes = this.clampToMaxSizes(sizes);
+    clampedSizes = this.clampToMinSizes(clampedSizes);
+
+    return clampedSizes;
   }
 
   private clampToMaxSizes(sizes: [number, number]): [number, number] {
-    const splitSizePixels = this.getPanesTotalSize();
+    const splitSize = this.getPanesTotalSize();
 
-    const minSizes = this.getMinSizes();
-    let maxSizes = this.getMaxSizes();
-
-    if (minSizes[0] > maxSizes[0]) {
-      maxSizes[0] = minSizes[0];
-    }
-    if (minSizes[1] > maxSizes[1]) {
-      maxSizes[1] = minSizes[1];
-    }
-
+    const maxSizes = this.getMaxSizes();
     const clampedSizes: [number, number] = [...sizes];
 
     if (isFinite(maxSizes[0]) && sizes[0] > maxSizes[0]) {
       clampedSizes[0] = maxSizes[0];
-      clampedSizes[1] = splitSizePixels - clampedSizes[0];
+      clampedSizes[1] = splitSize - clampedSizes[0];
     } else if (isFinite(maxSizes[1]) && sizes[1] > maxSizes[1]) {
       clampedSizes[1] = maxSizes[1];
-      clampedSizes[0] = splitSizePixels - clampedSizes[1];
+      clampedSizes[0] = splitSize - clampedSizes[1];
     }
 
     return clampedSizes;
   }
 
-  private clampToMinSizesAndCascadeResize(
-    sizes: [number, number]
-  ): [number, number] {
-    const splitIndex = this.layout.splits.indexOf(this);
+  private clampToMinSizes(sizes: [number, number]): [number, number] {
     const splitSize = this.getPanesTotalSize();
 
     const minSizes = this.getMinSizes();
@@ -219,43 +211,71 @@ export class ElasticSplit {
     if (sizes[0] < minSizes[0]) {
       clampedSizes[0] = minSizes[0];
       clampedSizes[1] = splitSize - clampedSizes[0];
-
-      if (splitIndex !== 0) {
-        const previousSplit = this.layout.splits[splitIndex - 1];
-
-        const position =
-          previousSplit.getResizerCenterPosition() - clampedSizes[0] + sizes[0];
-
-        const previousSplitComputedPaneSizeDifferences =
-          previousSplit.updatePaneSizes(position, true, false);
-
-        clampedSizes[1] += previousSplitComputedPaneSizeDifferences[1];
-      }
     } else if (sizes[0] > splitSize - minSizes[1]) {
       clampedSizes[0] = splitSize - minSizes[1];
       clampedSizes[1] = minSizes[1];
-
-      if (splitIndex !== this.layout.splits.length - 1) {
-        const nextSplit = this.layout.splits[splitIndex + 1];
-
-        const position =
-          nextSplit.getResizerCenterPosition() + sizes[0] - clampedSizes[0];
-
-        const nextSplitDifference = nextSplit.updatePaneSizes(
-          position,
-          false,
-          true
-        );
-
-        clampedSizes[0] += nextSplitDifference[0];
-      }
     }
 
     return clampedSizes;
   }
 
+  private cascadeResize(
+    clampedSizes: [number, number],
+    sizes: [number, number]
+  ): [number, number] {
+    let sizesAfterCascade = this.cascadeShrink(clampedSizes, sizes);
+    return sizesAfterCascade;
+  }
+
+  /**
+   * Handles increasing the sizes of adjacent panels when a panel reaches its
+   * maximum size during resizing. This function allows a panel to continue
+   * expanding by adjusting the sizes of neighboring panels accordingly.
+   */
+  private cascadeExpand() {}
+
+  /**
+   * Handles decreasing the sizes of adjacent panels when a panel reaches its
+   * minimum size during resizing. This function ensures that additional space
+   * is freed up to allow a panel to expand without restrictions.
+   */
+  private cascadeShrink(
+    clampedSizes: [number, number],
+    sizes: [number, number]
+  ): [number, number] {
+    const splitIndex = this.layout.splits.indexOf(this);
+    const splitSize = this.getPanesTotalSize();
+
+    const sizesAfterCascade: [number, number] = [...clampedSizes];
+
+    if (sizes[0] < clampedSizes[0] && splitIndex !== 0) {
+      const previousSplit = this.layout.splits[splitIndex - 1];
+      const previousSplitCenter = previousSplit.getResizerCenterPosition();
+
+      const position = previousSplitCenter - clampedSizes[0] + sizes[0];
+
+      const difference = previousSplit.updatePaneSizes(position, true, false);
+
+      sizesAfterCascade[1] += difference[1];
+    } else if (
+      sizes[0] > splitSize - clampedSizes[1] &&
+      splitIndex !== this.layout.splits.length - 1
+    ) {
+      const nextSplit = this.layout.splits[splitIndex + 1];
+      const nextSplitCenter = nextSplit.getResizerCenterPosition();
+
+      const position = nextSplitCenter + sizes[0] - clampedSizes[0];
+
+      const difference = nextSplit.updatePaneSizes(position, false, true);
+
+      sizesAfterCascade[0] += difference[0];
+    }
+
+    return sizesAfterCascade;
+  }
+
   private getMinSizes(): [number, number] {
-    const layoutSizePixels = this.layout.getPanesTotalSize();
+    const layoutSize = this.layout.getPanesTotalSize();
 
     const minSizes = [
       this.panes[0].options.minSize,
@@ -268,18 +288,18 @@ export class ElasticSplit {
     ];
 
     if (minSizes[0]?.unit === "%") {
-      result[0] = (layoutSizePixels * minSizes[0].value) / 100;
+      result[0] = (layoutSize * minSizes[0].value) / 100;
     }
 
     if (minSizes[1]?.unit === "%") {
-      result[1] = (layoutSizePixels * minSizes[1].value) / 100;
+      result[1] = (layoutSize * minSizes[1].value) / 100;
     }
 
     return result;
   }
 
   private getMaxSizes(): [number, number] {
-    const layoutSizePixels = this.layout.getPanesTotalSize();
+    const layoutSize = this.layout.getPanesTotalSize();
 
     const maxSizes = [
       this.panes[0].options.maxSize,
@@ -292,11 +312,11 @@ export class ElasticSplit {
     ];
 
     if (maxSizes[0]?.unit === "%") {
-      result[0] = (layoutSizePixels * maxSizes[0].value) / 100;
+      result[0] = (layoutSize * maxSizes[0].value) / 100;
     }
 
     if (maxSizes[1]?.unit === "%") {
-      result[1] = (layoutSizePixels * maxSizes[1].value) / 100;
+      result[1] = (layoutSize * maxSizes[1].value) / 100;
     }
 
     return result;
