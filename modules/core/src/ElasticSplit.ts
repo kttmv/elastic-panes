@@ -33,7 +33,7 @@ export class ElasticSplit {
     return resizerElement;
   }
 
-  private getTotalPanesSize(): number {
+  private getPanesTotalSize(): number {
     const sizes = this.getPaneSizes();
 
     return sizes[0] + sizes[1];
@@ -104,7 +104,7 @@ export class ElasticSplit {
     };
 
     const dragMove = (e: MouseEvent): void => {
-      if (this.layout.getTotalPanesSize() === 0) {
+      if (this.layout.getPanesTotalSize() === 0) {
         return;
       }
 
@@ -146,21 +146,21 @@ export class ElasticSplit {
     applyFirstPaneSize: boolean,
     applySecondPaneSize: boolean
   ): [number, number] {
-    const layoutPanesTotalSizePixels = this.layout.getTotalPanesSize();
-    const splitTotalSize = this.getTotalPanesSize();
+    const layoutPanesTotalSizePixels = this.layout.getPanesTotalSize();
+    const splitTotalSize = this.getPanesTotalSize();
     const resizerSize = this.getResizerSize();
 
-    let sizes: [number, number] = [
+    const sizes: [number, number] = [
       newResizerPosition - resizerSize / 2,
       splitTotalSize - newResizerPosition + resizerSize / 2,
     ];
 
-    sizes = this.clampToMaxSizes(sizes);
-    sizes = this.clampToMinSizesAndCascadeResize(sizes);
+    let clampedSizes = this.clampToMaxSizes(sizes);
+    clampedSizes = this.clampToMinSizesAndCascadeResize(clampedSizes);
 
     const percentageSizes = [
-      (sizes[0] / layoutPanesTotalSizePixels) * 100,
-      (sizes[1] / layoutPanesTotalSizePixels) * 100,
+      (clampedSizes[0] / layoutPanesTotalSizePixels) * 100,
+      (clampedSizes[1] / layoutPanesTotalSizePixels) * 100,
     ];
 
     percentageSizes[0] = parseFloat(percentageSizes[0].toFixed(1));
@@ -175,11 +175,14 @@ export class ElasticSplit {
     if (applySecondPaneSize)
       this.panes[1].applySize(percentageSizes[1], "%", direction);
 
-    return [sizes[0] - previousSizes[0], sizes[1] - previousSizes[1]];
+    return [
+      clampedSizes[0] - previousSizes[0],
+      clampedSizes[1] - previousSizes[1],
+    ];
   }
 
   private clampToMaxSizes(sizes: [number, number]): [number, number] {
-    const splitSizePixels = this.getTotalPanesSize();
+    const splitSizePixels = this.getPanesTotalSize();
 
     const minSizes = this.getMinSizes();
     let maxSizes = this.getMaxSizes();
@@ -208,7 +211,7 @@ export class ElasticSplit {
     sizes: [number, number]
   ): [number, number] {
     const splitIndex = this.layout.splits.indexOf(this);
-    const splitSize = this.getTotalPanesSize();
+    const splitSize = this.getPanesTotalSize();
 
     const minSizes = this.getMinSizes();
     const clampedSizes: [number, number] = [...sizes];
@@ -252,7 +255,7 @@ export class ElasticSplit {
   }
 
   private getMinSizes(): [number, number] {
-    const layoutSizePixels = this.layout.getTotalPanesSize();
+    const layoutSizePixels = this.layout.getPanesTotalSize();
 
     const minSizes = [
       this.panes[0].options.minSize,
@@ -276,7 +279,7 @@ export class ElasticSplit {
   }
 
   private getMaxSizes(): [number, number] {
-    const layoutSizePixels = this.layout.getTotalPanesSize();
+    const layoutSizePixels = this.layout.getPanesTotalSize();
 
     const maxSizes = [
       this.panes[0].options.maxSize,

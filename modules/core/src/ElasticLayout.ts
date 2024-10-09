@@ -58,7 +58,7 @@ export class ElasticLayout {
     this.parentElement = parent;
   }
 
-  public getTotalPanesSize() {
+  public getPanesTotalSize() {
     const rect = this.parentElement.getBoundingClientRect();
 
     let totalSize =
