@@ -223,23 +223,64 @@ export class ElasticSplit {
     clampedSizes: [number, number],
     sizes: [number, number]
   ): [number, number] {
-    // let sizesAfterCascade = this.cascadeExpand(clampedSizes, sizes);
-    let sizesAfterCascade = clampedSizes;
+    let sizesAfterCascade = this.cascadeExpand(clampedSizes, sizes);
     sizesAfterCascade = this.cascadeShrink(sizesAfterCascade, sizes);
     return sizesAfterCascade;
   }
 
   /**
-   * Handles increasing the sizes of adjacent panels when a panel reaches its
-   * maximum size during resizing. This function allows a panel to continue
-   * expanding by adjusting the sizes of neighboring panels accordingly.
+   * Handles increasing the sizes of adjacent panes when a pane reaches its
+   * maximum size during resizing. This function allows a pane to continue
+   * expanding by adjusting the sizes of neighboring panes accordingly.
    */
-  private cascadeExpand() {}
+  private cascadeExpand(
+    clampedSizes: [number, number],
+    sizes: [number, number]
+  ): [number, number] {
+    const splitIndex = this.layout.splits.indexOf(this);
+    const splitSize = this.getPanesTotalSize();
+
+    const minSizes = this.getPaneMinSizes();
+
+    const sizesAfterCascade: [number, number] = [...clampedSizes];
+
+    if (
+      sizes[0] > clampedSizes[0] &&
+      clampedSizes[1] > minSizes[1] &&
+      splitIndex > 0
+    ) {
+      // cascade to the left
+      const previousSplit = this.layout.splits[splitIndex - 1];
+      const previousSplitPosition = previousSplit.getResizerCenterPosition();
+
+      const position = previousSplitPosition - (clampedSizes[0] - sizes[0]);
+
+      const difference = previousSplit.updatePaneSizes(position, true, false);
+
+      sizesAfterCascade[1] += difference[1];
+    } else if (
+      sizes[1] > clampedSizes[1] &&
+      clampedSizes[0] > minSizes[0] &&
+      splitIndex < this.layout.splits.length - 1
+    ) {
+      // cascade to the right
+      const nextSplit = this.layout.splits[splitIndex + 1];
+      const nextSplitPosition = nextSplit.getResizerCenterPosition();
+
+      const position = nextSplitPosition + (sizes[0] - clampedSizes[0]);
+
+      const difference = nextSplit.updatePaneSizes(position, false, true);
+
+      sizesAfterCascade[0] += difference[0];
+    }
+
+    return sizesAfterCascade;
+  }
 
   /**
-   * Handles decreasing the sizes of adjacent panels when a panel reaches its
+   * Handles decreasing the sizes of adjacent panes when a pane reaches its
    * minimum size during resizing. This function ensures that additional space
-   * is freed up to allow a panel to expand without restrictions.
+   * is freed up to allow a pane to expand without restrictions.
    */
   private cascadeShrink(
     clampedSizes: [number, number],
