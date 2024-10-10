@@ -116,7 +116,7 @@ export class ElasticSplit {
         resizerStartPosition + mousePosition - dragStartPosition;
       newResizerPosition = parseFloat(newResizerPosition.toFixed(1));
 
-      this.updatePaneSizes(newResizerPosition, true, true);
+      this.updatePaneSizes(newResizerPosition);
 
       const totalPercentage = this.layout.panes
         .map((pane) =>
@@ -143,8 +143,7 @@ export class ElasticSplit {
 
   public updatePaneSizes(
     newResizerPosition: number,
-    applyFirstPaneSize: boolean,
-    applySecondPaneSize: boolean
+    cascadedFrom?: "left" | "right"
   ): [number, number] {
     const layoutPanesTotalSize = this.layout.getPanesTotalSize();
     const splitTotalSize = this.getPanesTotalSize();
@@ -156,7 +155,7 @@ export class ElasticSplit {
     ];
 
     const clampedSizes = this.clampSizes(sizes);
-    const newSizes = this.cascadeResize(clampedSizes, sizes);
+    const newSizes = this.cascadeResize(clampedSizes, sizes, cascadedFrom);
 
     const percentages = [
       (newSizes[0] / layoutPanesTotalSize) * 100,
@@ -170,9 +169,9 @@ export class ElasticSplit {
 
     const direction = this.layout.options.direction;
 
-    if (applyFirstPaneSize)
+    if (cascadedFrom === undefined || cascadedFrom === "right")
       this.panes[0].applySize(percentages[0], "%", direction);
-    if (applySecondPaneSize)
+    if (cascadedFrom === undefined || cascadedFrom === "left")
       this.panes[1].applySize(percentages[1], "%", direction);
 
     return [newSizes[0] - previousSizes[0], newSizes[1] - previousSizes[1]];
@@ -226,43 +225,61 @@ export class ElasticSplit {
    */
   private cascadeResize(
     clampedSizes: [number, number],
-    sizes: [number, number]
+    sizes: [number, number],
+    cascadedFrom?: "left" | "right"
   ): [number, number] {
     const splitIndex = this.layout.splits.indexOf(this);
+    const lastSplitIndex = this.layout.splits.length - 1;
 
     const minSizes = this.getPaneMinSizes();
     const maxSizes = this.getPaneMaxSizes();
 
     const sizesAfterCascade: [number, number] = [...clampedSizes];
 
-    if (
+    // investigate if comparing to min and max sizes is really necessary
+    const shouldCascadeShrinkLeft =
+      sizes[0] < clampedSizes[0] && clampedSizes[1] < maxSizes[1];
+    const shouldCascadeExpandLeft =
+      sizes[0] > clampedSizes[0] && clampedSizes[1] > minSizes[1];
+    const shouldCascadeShrinkRight =
+      sizes[1] < clampedSizes[1] && clampedSizes[0] < maxSizes[0];
+    const shouldCascadeExpandRight =
+      sizes[1] > clampedSizes[1] && clampedSizes[0] > minSizes[0];
+
+    const shouldCascadeLeft =
+      cascadedFrom !== "left" &&
       splitIndex > 0 &&
-      ((sizes[0] < clampedSizes[0] && clampedSizes[1] < maxSizes[1]) ||
-        (sizes[0] > clampedSizes[0] && clampedSizes[1] > minSizes[1]))
-    ) {
-      // cascade to the left
-      const previousSplit = this.layout.splits[splitIndex - 1];
-      const previousSplitPosition = previousSplit.getResizerCenterPosition();
+      (shouldCascadeShrinkLeft || shouldCascadeExpandLeft);
 
-      const position = previousSplitPosition - (clampedSizes[0] - sizes[0]);
+    const shouldCascadeRight =
+      cascadedFrom !== "right" &&
+      splitIndex < lastSplitIndex &&
+      (shouldCascadeShrinkRight || shouldCascadeExpandRight);
 
-      const difference = previousSplit.updatePaneSizes(position, true, false);
-
-      sizesAfterCascade[1] += difference[1];
-    } else if (
-      splitIndex < this.layout.splits.length - 1 &&
-      ((sizes[1] > clampedSizes[1] && clampedSizes[0] > minSizes[0]) ||
-        (sizes[1] < clampedSizes[1] && clampedSizes[0] < maxSizes[0]))
-    ) {
-      // cascade to the right
+    if (shouldCascadeRight) {
       const nextSplit = this.layout.splits[splitIndex + 1];
       const nextSplitPosition = nextSplit.getResizerCenterPosition();
 
       const position = nextSplitPosition + (sizes[0] - clampedSizes[0]);
 
-      const difference = nextSplit.updatePaneSizes(position, false, true);
+      const difference = nextSplit.updatePaneSizes(position, "left");
 
-      sizesAfterCascade[0] += difference[0];
+      if (!shouldCascadeLeft) {
+        sizesAfterCascade[0] += difference[0];
+      }
+    }
+
+    if (shouldCascadeLeft) {
+      const previousSplit = this.layout.splits[splitIndex - 1];
+      const previousSplitPosition = previousSplit.getResizerCenterPosition();
+
+      const position = previousSplitPosition - (clampedSizes[0] - sizes[0]);
+
+      const difference = previousSplit.updatePaneSizes(position, "right");
+
+      if (!shouldCascadeRight) {
+        sizesAfterCascade[1] += difference[1];
+      }
     }
 
     return sizesAfterCascade;

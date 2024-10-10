@@ -74,6 +74,9 @@ export class ElasticLayout {
     return totalSize <= 0 ? 0 : parseFloat(totalSize.toFixed(1));
   }
 
+  // todo: apply does not respect min sizes
+  // it is possible to scale initial sizes so that they would be
+  // smaller than their min sizes
   public apply() {
     for (const split of this.splits) {
       split.apply();
