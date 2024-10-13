@@ -25,7 +25,7 @@ const horizontal4 = document.getElementById("horizontal_4")!;
 
 const horizontalPane1 = new ElasticPane(horizontal1, {
   initialSize: {
-    value: 20,
+    value: 30,
     unit: "%",
   },
   minSize: {
@@ -67,7 +67,7 @@ const horizontalPane3 = new ElasticPane(horizontal3, {
 });
 const horizontalPane4 = new ElasticPane(horizontal4, {
   initialSize: {
-    value: 20,
+    value: 10,
     unit: "%",
   },
   minSize: {

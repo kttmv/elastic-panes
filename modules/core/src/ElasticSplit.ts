@@ -1,5 +1,6 @@
 import { ElasticLayout } from "./ElasticLayout";
 import { ElasticPane } from "./ElasticPane";
+import { roundToDecimalPlaces } from "./utilities";
 
 export class ElasticSplit {
   public readonly panes: readonly [ElasticPane, ElasticPane];
@@ -51,6 +52,9 @@ export class ElasticSplit {
       sizes = [firstRect.height, secondRect.height];
     }
 
+    sizes[0] = roundToDecimalPlaces(sizes[0], 1);
+    sizes[1] = roundToDecimalPlaces(sizes[1], 1);
+
     return sizes;
   }
 
@@ -61,7 +65,7 @@ export class ElasticSplit {
       position -
       (this.layout.options.direction === "horizontal" ? rect.left : rect.top);
 
-    return relativePosition;
+    return roundToDecimalPlaces(relativePosition, 1);
   }
 
   public getResizerCenterPosition(): number {
@@ -72,7 +76,7 @@ export class ElasticSplit {
         : resizerRect.top + resizerRect.height / 2
     );
 
-    return center;
+    return roundToDecimalPlaces(center, 1);
   }
 
   private getResizerSize(): number {
@@ -82,7 +86,7 @@ export class ElasticSplit {
         ? resizerRect.width
         : resizerRect.height;
 
-    return size;
+    return roundToDecimalPlaces(size, 1);
   }
 
   private addDragHandler(): void {
@@ -101,7 +105,7 @@ export class ElasticSplit {
     };
 
     const dragMove = (e: MouseEvent): void => {
-      if (this.layout.getPanesTotalSize() === 0) {
+      if (this.layout.getAvailableSize() === 0) {
         return;
       }
 
@@ -141,14 +145,21 @@ export class ElasticSplit {
     newResizerPosition: number,
     cascadedFrom?: "left" | "right"
   ): [number, number] {
-    const layoutPanesTotalSize = this.layout.getPanesTotalSize();
+    newResizerPosition = roundToDecimalPlaces(newResizerPosition, 0);
+
+    const layoutPanesTotalSize = this.layout.getAvailableSize();
     const splitTotalSize = this.getPanesTotalSize();
     const resizerSize = this.getResizerSize();
+
+    const previousSizes = this.getPaneSizes();
 
     const sizes: [number, number] = [
       newResizerPosition - resizerSize / 2,
       splitTotalSize - newResizerPosition + resizerSize / 2,
     ];
+
+    sizes[0] = roundToDecimalPlaces(sizes[0], 1);
+    sizes[1] = roundToDecimalPlaces(sizes[1], 1);
 
     const clampedSizes = this.clampSizes(sizes);
 
@@ -159,8 +170,6 @@ export class ElasticSplit {
       (newSizes[1] / layoutPanesTotalSize) * 100,
     ];
 
-    const previousSizes = this.getPaneSizes();
-
     const direction = this.layout.options.direction;
 
     if (cascadedFrom === undefined || cascadedFrom === "right")
@@ -168,7 +177,12 @@ export class ElasticSplit {
     if (cascadedFrom === undefined || cascadedFrom === "left")
       this.panes[1].applySize(percentages[1], "%", direction);
 
-    return [newSizes[0] - previousSizes[0], newSizes[1] - previousSizes[1]];
+    const difference: [number, number] = [
+      newSizes[0] - previousSizes[0],
+      newSizes[1] - previousSizes[1],
+    ];
+
+    return difference;
   }
 
   private clampSizes(sizes: [number, number]): [number, number] {
@@ -192,6 +206,9 @@ export class ElasticSplit {
       clampedSizes[0] = splitSize - clampedSizes[1];
     }
 
+    clampedSizes[0] = roundToDecimalPlaces(clampedSizes[0], 1);
+    clampedSizes[1] = roundToDecimalPlaces(clampedSizes[1], 1);
+
     return clampedSizes;
   }
 
@@ -209,6 +226,9 @@ export class ElasticSplit {
       clampedSizes[1] = minSizes[1];
     }
 
+    clampedSizes[0] = roundToDecimalPlaces(clampedSizes[0], 1);
+    clampedSizes[1] = roundToDecimalPlaces(clampedSizes[1], 1);
+
     return clampedSizes;
   }
 
@@ -223,37 +243,68 @@ export class ElasticSplit {
     cascadedFrom?: "left" | "right"
   ): [number, number] {
     const splitIndex = this.layout.splits.indexOf(this);
-    const lastSplitIndex = this.layout.splits.length - 1;
 
     const minSizes = this.getPaneMinSizes();
     const maxSizes = this.getPaneMaxSizes();
 
     const sizesAfterCascade: [number, number] = [...clampedSizes];
 
-    const a = clampedSizes[0] == minSizes[0] && clampedSizes[1] == maxSizes[1];
-    const b = clampedSizes[1] == minSizes[1] && clampedSizes[0] == maxSizes[0];
+    const firstSplit = splitIndex === 0;
+    const lastSplit = splitIndex === this.layout.splits.length - 1;
+    const edgeSplit = firstSplit || lastSplit;
 
-    // investigate if comparing to min and max sizes is really necessary
+    const a =
+      clampedSizes[0] == minSizes[0] &&
+      clampedSizes[1] == maxSizes[1] &&
+      !edgeSplit;
+    const b =
+      clampedSizes[1] == minSizes[1] &&
+      clampedSizes[0] == maxSizes[0] &&
+      !edgeSplit;
+    // const a = false;
+    // const b = false;
+
     const shouldCascadeShrinkLeft =
       sizes[0] < clampedSizes[0] && (clampedSizes[1] < maxSizes[1] || a);
     const shouldCascadeExpandLeft =
       sizes[0] > clampedSizes[0] && (clampedSizes[1] > minSizes[1] || b);
     const shouldCascadeShrinkRight =
-      sizes[1] < clampedSizes[1] && (clampedSizes[0] < maxSizes[0] || a);
+      sizes[1] < clampedSizes[1] && (clampedSizes[0] < maxSizes[0] || b);
     const shouldCascadeExpandRight =
-      sizes[1] > clampedSizes[1] && (clampedSizes[0] > minSizes[0] || b);
+      sizes[1] > clampedSizes[1] && (clampedSizes[0] > minSizes[0] || a);
 
     const shouldCascadeLeft =
       cascadedFrom !== "left" &&
-      splitIndex > 0 &&
+      !firstSplit &&
       (shouldCascadeShrinkLeft || shouldCascadeExpandLeft);
 
     const shouldCascadeRight =
       cascadedFrom !== "right" &&
-      splitIndex < lastSplitIndex &&
+      !lastSplit &&
       (shouldCascadeShrinkRight || shouldCascadeExpandRight);
 
-    if (shouldCascadeRight) {
+    let cascaded = false;
+    const differenceAfterCascade: [number, number] = [0, 0];
+
+    if (shouldCascadeLeft) {
+      const previousSplit = this.layout.splits[splitIndex - 1];
+      const previousSplitPosition = previousSplit.getResizerCenterPosition();
+
+      const position = previousSplitPosition - (clampedSizes[0] - sizes[0]);
+
+      const difference = previousSplit.updatePaneSizes(position, "right");
+
+      if (!shouldCascadeRight) {
+        differenceAfterCascade[1] += difference[1];
+      }
+
+      cascaded = true;
+    }
+
+    if (
+      (!cascaded && shouldCascadeRight) ||
+      (cascaded && differenceAfterCascade[1] !== 0)
+    ) {
       const nextSplit = this.layout.splits[splitIndex + 1];
       const nextSplitPosition = nextSplit.getResizerCenterPosition();
 
@@ -266,24 +317,11 @@ export class ElasticSplit {
       }
     }
 
-    if (shouldCascadeLeft) {
-      const previousSplit = this.layout.splits[splitIndex - 1];
-      const previousSplitPosition = previousSplit.getResizerCenterPosition();
-
-      const position = previousSplitPosition - (clampedSizes[0] - sizes[0]);
-
-      const difference = previousSplit.updatePaneSizes(position, "right");
-
-      if (!shouldCascadeRight) {
-        sizesAfterCascade[1] += difference[1];
-      }
-    }
-
     return sizesAfterCascade;
   }
 
   private getPaneMinSizes(): [number, number] {
-    const layoutSize = this.layout.getPanesTotalSize();
+    const layoutSize = this.layout.getAvailableSize();
 
     const minSizes = [
       this.panes[0].options.minSize,
@@ -303,11 +341,14 @@ export class ElasticSplit {
       result[1] = (layoutSize * minSizes[1].value) / 100;
     }
 
+    result[0] = roundToDecimalPlaces(result[0], 1);
+    result[1] = roundToDecimalPlaces(result[1], 1);
+
     return result;
   }
 
   private getPaneMaxSizes(): [number, number] {
-    const layoutSize = this.layout.getPanesTotalSize();
+    const layoutSize = this.layout.getAvailableSize();
 
     const maxSizes = [
       this.panes[0].options.maxSize,
@@ -326,6 +367,9 @@ export class ElasticSplit {
     if (maxSizes[1]?.unit === "%") {
       result[1] = (layoutSize * maxSizes[1].value) / 100;
     }
+
+    result[0] = roundToDecimalPlaces(result[0], 1);
+    result[1] = roundToDecimalPlaces(result[1], 1);
 
     return result;
   }

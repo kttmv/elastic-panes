@@ -1,6 +1,7 @@
 import { ElasticPane } from "./ElasticPane";
 import { ElasticSplit } from "./ElasticSplit";
 import { Direction } from "./types";
+import { roundToDecimalPlaces } from "./utilities";
 
 export type ElasticLayoutOptions = {
   direction?: Direction;
@@ -58,18 +59,27 @@ export class ElasticLayout {
     this.parentElement = parent;
   }
 
-  public getPanesTotalSize() {
+  public getAvailableSize() {
     const rect = this.parentElement.getBoundingClientRect();
 
     let totalSize =
       this.options.direction === "horizontal" ? rect.width : rect.height;
 
+    totalSize = roundToDecimalPlaces(totalSize, 1);
+
     for (const split of this.splits) {
       const rect = split.resizerElement.getBoundingClientRect();
-      const resizerSize =
+      let resizerSize =
         this.options.direction === "horizontal" ? rect.width : rect.height;
+      resizerSize = roundToDecimalPlaces(resizerSize, 1);
+
       totalSize -= resizerSize;
     }
+
+    // let test = 0;
+    // for (const pane of this.panes) {
+    //   test += Math.round(pane.element.getBoundingClientRect().width);
+    // }
 
     return totalSize <= 0 ? 0 : totalSize;
   }
@@ -98,11 +108,7 @@ export class ElasticLayout {
       }
     }
 
-    const parentRect = this.parentElement.getBoundingClientRect();
-    const availableSize =
-      this.options.direction === "horizontal"
-        ? parentRect.width
-        : parentRect.height;
+    const availableSize = this.getAvailableSize();
     let availableSizePercentage =
       ((availableSize - totalSizePixels) / availableSize) * 100;
 
