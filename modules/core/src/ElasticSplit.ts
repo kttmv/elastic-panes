@@ -51,9 +51,6 @@ export class ElasticSplit {
       sizes = [firstRect.height, secondRect.height];
     }
 
-    sizes[0] = parseFloat(sizes[0].toFixed(2));
-    sizes[1] = parseFloat(sizes[1].toFixed(2));
-
     return sizes;
   }
 
@@ -64,7 +61,7 @@ export class ElasticSplit {
       position -
       (this.layout.options.direction === "horizontal" ? rect.left : rect.top);
 
-    return parseFloat(relativePosition.toFixed(2));
+    return relativePosition;
   }
 
   public getResizerCenterPosition(): number {
@@ -75,7 +72,7 @@ export class ElasticSplit {
         : resizerRect.top + resizerRect.height / 2
     );
 
-    return parseFloat(center.toFixed(2));
+    return center;
   }
 
   private getResizerSize(): number {
@@ -85,7 +82,7 @@ export class ElasticSplit {
         ? resizerRect.width
         : resizerRect.height;
 
-    return parseFloat(size.toFixed(2));
+    return size;
   }
 
   private addDragHandler(): void {
@@ -114,7 +111,6 @@ export class ElasticSplit {
 
       let newResizerPosition =
         resizerStartPosition + mousePosition - dragStartPosition;
-      newResizerPosition = parseFloat(newResizerPosition.toFixed(2));
 
       this.updatePaneSizes(newResizerPosition);
 
@@ -156,18 +152,12 @@ export class ElasticSplit {
 
     const clampedSizes = this.clampSizes(sizes);
 
-    // clampedSizes[0] = parseFloat(clampedSizes[0].toFixed(2));
-    // clampedSizes[1] = parseFloat(clampedSizes[1].toFixed(2));
-
     const newSizes = this.cascadeResize(clampedSizes, sizes, cascadedFrom);
 
     const percentages = [
       (newSizes[0] / layoutPanesTotalSize) * 100,
       (newSizes[1] / layoutPanesTotalSize) * 100,
     ];
-
-    percentages[0] = parseFloat(percentages[0].toFixed(2));
-    percentages[1] = parseFloat(percentages[1].toFixed(2));
 
     const previousSizes = this.getPaneSizes();
 

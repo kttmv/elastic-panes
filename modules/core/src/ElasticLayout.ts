@@ -68,10 +68,10 @@ export class ElasticLayout {
       const rect = split.resizerElement.getBoundingClientRect();
       const resizerSize =
         this.options.direction === "horizontal" ? rect.width : rect.height;
-      totalSize -= parseFloat(resizerSize.toFixed(2));
+      totalSize -= resizerSize;
     }
 
-    return totalSize <= 0 ? 0 : parseFloat(totalSize.toFixed(2));
+    return totalSize <= 0 ? 0 : totalSize;
   }
 
   // todo: apply does not respect min sizes
