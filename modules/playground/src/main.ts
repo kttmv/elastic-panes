@@ -39,7 +39,7 @@ const horizontalPane1 = new ElasticPane(horizontal1, {
 });
 const horizontalPane2 = new ElasticPane(horizontal2, {
   initialSize: {
-    value: 50,
+    value: 10,
     unit: "%",
   },
   minSize: {
@@ -53,7 +53,7 @@ const horizontalPane2 = new ElasticPane(horizontal2, {
 });
 const horizontalPane3 = new ElasticPane(horizontal3, {
   initialSize: {
-    value: 10,
+    value: 50,
     unit: "%",
   },
   minSize: {
